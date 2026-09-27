@@ -198,7 +198,7 @@ function showLogin(){
 }
 function showAdminLogin(){
  const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');
- if(g)g.style.display='block'; if(o)o.style.display='none'; if(a)a.style.display='none'; if(s)s.style.display='none';
+ if(g)g.style.display='flex'; if(o)o.style.display='none'; if(a)a.style.display='none'; if(s)s.style.display='none';
  const c=document.getElementById('loginChooser'),ad=document.getElementById('adminLoginForm'); if(c)c.style.display='none'; if(ad)ad.style.display='block';
 }
 function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='flex';if(a)a.style.display='none';if(s)s.style.display='none';}
@@ -774,7 +774,10 @@ function resetData(){if(confirm("सारा local data delete करना ह
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))).catch(()=>{}));
 if("caches" in window)window.addEventListener("load",()=>caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{}));
 function bootERP(){
-  try{if(userMode){hideLogin();render();}else{showLogin();}}catch(e){
+  try{
+    showLogin();
+    if(db.settings?.cloudSync?.enabled)loadFirebaseSdk().then(()=>initCloud()).catch(()=>{});
+  }catch(e){
     console.error('ERP boot error',e);
     const app=document.getElementById('app');
     if(app)app.innerHTML='<div class="panel"><h3>⚠️ ERP Load Error</h3><div class="notice">Software load करते समय समस्या आई। कृपया Refresh करें।</div><div class="muted">'+esc(e?.message||e)+'</div></div>';
