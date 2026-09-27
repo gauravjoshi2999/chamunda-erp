@@ -388,7 +388,7 @@ document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"
 +field('Date','officeDate','date',selectedDate,'','required')
 +field('Time','officeTime','text',currentTime12(),'','required placeholder="12:30 PM" autocomplete="off"')
 +field('Customer Name','officeCustomer','text','','','required autocomplete="off"')
-+field('Place','officePlace','text','','','required')
++field('Place','officePlace','text','','','')
 +'<div class="field"><label>Vehicle Type</label><select name="officeVehicleType" id="officeVehicleType" required><option value="Dumper">Dumper</option><option value="Tractor">Tractor</option></select></div>'
 +'<div class="field" id="officeTractorCountWrap" style="display:none"><label>कितने Tractor?</label><input name="officeTractorCount" id="officeTractorCount" type="number" min="1" step="1" placeholder="जैसे 2"></div>'
 +'<div class="field"><label>Material</label><select name="officeMaterial" id="officeMaterial" required>'+materialOptions+'</select></div>'
