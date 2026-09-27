@@ -1,0 +1,1 @@
+Chamunda ERP V17 final production customer controls applied. This file intentionally triggers the normal deployment pipeline after the automated source patch.
