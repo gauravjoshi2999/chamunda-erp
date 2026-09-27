@@ -404,20 +404,21 @@ async function sendOfficeDayWhatsApp(date){
     if(y>165){doc.addPage();y=18}
     y+=7;
 
-    // केवल requested four-column summary table.
-    const summaryX=14, summaryY=y, summaryWidths=[72,72,72,72];
-    const summaryHeaders=["भराव Total","Royalty","Naka","Difference"];
+    // Compact summary table matching the width/row height of the main report table.
+    const summaryX=10, summaryY=y, summaryWidths=[47.5,47.5,47.5,47.5];
+    const summaryHeaders=["Bharav Total","Royalty","Naka","Difference"];
     const summaryValues=[
       num(bharavTrips)+" Tractor",
-      "₹"+Number(royaltyWeight||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
-      "₹"+Number(nakaRoyalty||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
-      "₹"+Number(difference||0).toLocaleString("en-IN",{maximumFractionDigits:2})
+      Number(royaltyWeight||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
+      Number(nakaRoyalty||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
+      Number(difference||0).toLocaleString("en-IN",{maximumFractionDigits:2})
     ];
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     let sx=summaryX;
-    summaryHeaders.forEach((h,i)=>{doc.rect(sx,summaryY,summaryWidths[i],8);doc.text(h,sx+2,summaryY+5);sx+=summaryWidths[i]});
+    summaryHeaders.forEach((h,i)=>{doc.rect(sx,summaryY,summaryWidths[i],7);doc.setFont("helvetica","normal");doc.text(h,sx+1,summaryY+4.5);sx+=summaryWidths[i]});
     sx=summaryX;
-    summaryValues.forEach((v,i)=>{doc.rect(sx,summaryY+8,summaryWidths[i],9);doc.text(String(v),sx+2,summaryY+14);sx+=summaryWidths[i]});
+    summaryValues.forEach((v,i)=>{doc.rect(sx,summaryY+7,summaryWidths[i],7);doc.setFont("helvetica","bold");doc.text(String(v),sx+1,summaryY+4.5+7);sx+=summaryWidths[i]});
+    doc.setFont("helvetica","normal");
 
     const blob=doc.output("blob");
     const file=new File([blob],"chamunda-office-report-"+String(date).replace(/[^0-9-]/g,"")+".pdf",{type:"application/pdf"});
