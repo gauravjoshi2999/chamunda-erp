@@ -32,7 +32,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 <div class="toast" id="toast"></div>
 <script>
 const KEY="chamunda_erp_v1";
-const ERP_VERSION="V19";
+const ERP_VERSION="V20";
 const FINAL_CUSTOMER_DELETE_V17=true;
 // Chamunda ERP Firebase Live Sync (Firebase Web App config)
 const BUILTIN_FIREBASE_CONFIG={
@@ -167,9 +167,10 @@ function officeNav(){
   if(!n)return;
   n.innerHTML='<button class="'+(officePage==='entry'?'active':'')+'" onclick="officePage=\'entry\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeEntry()">📝 Office Entry</button>'+
              '<button class="'+(officePage==='bharav'?'active':'')+'" onclick="officePage=\'bharav\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeBharav()">🚜 भराव</button>'+
+             '<button class="'+(officePage==='diesel'?'active':'')+'" onclick="officePage=\'diesel\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeDiesel()">⛽ Diesel</button>'+
              '<button class="danger" onclick="erpLogout()">Logout</button>';
 }
-function render(){if(userMode==='office'){if(officePage==='bharav')officeBharav();else officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
+function render(){if(userMode==='office'){if(officePage==='bharav')officeBharav();else if(officePage==='diesel')officeDiesel();else officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
 function normalizeWeight(raw){const s=String(raw??'').trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
 function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
@@ -270,6 +271,29 @@ function openCustomerLedger(name,fromDate,toDate){let now=today(),from=fromDate|
 function estimateBill(name,from,to){let rows=db.sales.filter(x=>String(x.customer||"").trim().toLowerCase()===String(name||"").trim().toLowerCase()&&x.date>=from&&x.date<=to),tw=rows.reduce((a,x)=>a+Number(x.weight||0),0),ta=rows.reduce((a,x)=>a+Number(x.total||0),0),w=window.open("","_blank");if(!w){alert("Popup blocked है।");return}w.document.write("<!doctype html><html><head><title>ESTIMATE</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:7px;text-align:left}</style></head><body><h1 style='text-align:center'>ESTIMATE</h1><p><b>Customer:</b> "+esc(name)+"</p><p><b>Date Range:</b> "+dmy(from)+" to "+dmy(to)+"</p><table><tr><th>Date</th><th>Material</th><th>Weight</th><th>Rate</th><th>Total</th></tr>"+rows.map(x=>"<tr><td>"+dmy(x.date)+"</td><td>"+esc(x.material||"")+"</td><td>"+num(x.weight)+" MT</td><td>"+money(x.rate)+"</td><td>"+money(x.total)+"</td></tr>").join("")+"<tr><th colspan='2'>Total</th><th>"+num(tw)+" MT</th><th></th><th>"+money(ta)+"</th></tr></table><p><b>Estimate only — Not a GST Bill.</b></p></body></html>");w.document.close();setTimeout(()=>w.print(),300)}
 function sendCustomerReminder(name,amount){let c=customerByName(name);if(!c.mobile)return alert('इस customer का mobile number saved नहीं है');let digits=String(c.mobile).replace(/\D/g,'');if(digits.length!==10)return alert('Customer mobile 10 digits होना चाहिए');let text='Namaste '+name+', aapka Chamunda ERP mein baki amount '+money(Math.max(0,amount))+' hai. Kripya payment kar dein.';window.open('https://wa.me/91'+digits+'?text='+encodeURIComponent(text),'_blank')}
 async function shareCustomerStatement(name,from,to){let rows=customerLedgerRows(name,from,to),z=customerSummary(name),text='Chamunda ERP — '+name+'\\n'+dmy(from)+' se '+dmy(to)+'\\n\\n'+rows.map(x=>dmy(x.date)+' | '+x.desc+' | Debit '+money(x.debit)+' | Credit '+money(x.credit)).join('\\n')+'\\n\\nBalance: '+money(z.balance);try{if(navigator.share)await navigator.share({title:'Khata — '+name,text});else{await navigator.clipboard?.writeText(text);toast('Statement text copy हो गया')}}catch(e){}}
+function officeDiesel(){
+  db.dieselIn??=[];
+  const vehicles=[...new Set(db.dieselIn.filter(x=>x.sourceType==='Vehicle'&&x.vehicle).map(x=>x.vehicle))];
+  document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+
+    header('⛽ Diesel Entry','Diesel की entry — Drum या Vehicle','')+
+    '<div class="notice"><b>Office Diesel:</b> यहाँ की गई Diesel entry Main Login के Diesel section में भी दिखाई देगी। Settings और बाकी Main sections Office Login में उपलब्ध नहीं हैं।</div>'+
+    '<div class="panel"><h3>Diesel आया</h3><form id="officeDieselForm"><div class="grid">'+
+    field('Date','date','date',today(),'','required')+
+    select('Diesel कैसे आया?','sourceType',['Drum','Vehicle'])+
+    field('Drum कितने?','drums','number','','','min="1" step="1"')+
+    field('Litres','litres','number','','','required min="0.001" step="0.001"')+
+    field('Rate / Litre','rate','number','','','required min="0" step="0.01"')+
+    field('Amount','amount','number','','','readonly required')+
+    '<div class="field" id="officeDieselVehicleWrap" style="display:none"><label>कौन सा Vehicle?</label><input name="vehicle" id="officeDieselVehicle" list="officeDieselVehicles" placeholder="Vehicle number"><datalist id="officeDieselVehicles">'+vehicles.map(v=>'<option value="'+esc(v)+'">').join('')+'</datalist></div>'+
+    '</div><div class="actions"><button class="btn green" type="submit">✓ Save Diesel</button><button class="btn" type="button" onclick="officeDiesel()">Clear</button></div></form></div>'+
+    '<div class="panel"><h3>इस महीने का Diesel Summary</h3><div class="tablewrap"><table><tr><th>Source</th><th>Vehicle / Drum</th><th>Total Litres</th><th>Total Amount</th></tr>'+dieselMonthRows()+'</table></div></div>';
+  officeNav();
+  const f=document.getElementById('officeDieselForm'),type=f.elements.sourceType,vw=document.getElementById('officeDieselVehicleWrap'),vi=document.getElementById('officeDieselVehicle'),drums=f.elements.drums,lit=f.elements.litres,rate=f.elements.rate,amt=f.elements.amount;
+  function sync(){const isV=type.value==='Vehicle';vw.style.display=isV?'block':'none';vi.required=isV;drums.required=!isV;if(!isV)vi.value='';if(isV)drums.value=''}
+  function calc(){amt.value=Number(((+lit.value||0)*(+rate.value||0)).toFixed(2))||''}
+  type.onchange=sync;lit.oninput=calc;rate.oninput=calc;sync();calc();
+  f.onsubmit=e=>{e.preventDefault();if(!f.reportValidity())return;let x=Object.fromEntries(new FormData(f));x.litres=+x.litres;x.drums=x.sourceType==='Drum'?+x.drums:0;x.rate=+x.rate;x.amount=Number((x.litres*x.rate).toFixed(2));x.vehicle=x.sourceType==='Vehicle'?(x.vehicle||'').trim():'';x.source='Office';db.dieselIn.push(x);save();toast('Diesel save हो गया — Main Login में भी दिखाई देगा');officeDiesel()}
+}
 function officeBharav(d=today()){
   db.bharav??=[];
   db.bharavPayments??=[];
