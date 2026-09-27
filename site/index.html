@@ -136,7 +136,7 @@ const dmy=d=>{if(!d)return "";let [y,m,dd]=String(d).slice(0,10).split("-");retu
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
 const num=n=>Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:3});
 let db=load();migrate();
-let userMode=sessionStorage.getItem("chamunda_erp_login_mode")||"admin";
+let userMode=localStorage.getItem("chamunda_erp_login_mode")||"";
 let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false,authUser=null;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
 function blank(){return {sales:[],officeEntries:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["12 MM","6 MM","20 MM","Dust","M-Sand"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
@@ -166,7 +166,7 @@ function erpLogout(){
   try{clearTimeout(cloudPushTimer);}catch(e){}
   try{if(cloudUnsub){cloudUnsub();cloudUnsub=null;}}catch(e){}
   cloudRef=null;cloudReady=false;cloudInitInProgress=false;authUser=null;
-  sessionStorage.removeItem("chamunda_erp_login_mode");sessionStorage.removeItem("chamunda_office_page");
+  localStorage.removeItem("chamunda_erp_login_mode");sessionStorage.removeItem("chamunda_office_page");
   userMode='admin';
   try{if(window.firebase&&firebase.auth)firebase.auth().signOut().catch(()=>{});}catch(e){}
   showLogin();
