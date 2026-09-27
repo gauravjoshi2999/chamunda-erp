@@ -414,24 +414,15 @@ async function sendOfficeDayWhatsApp(date){
     });
 
     if(y>165){doc.addPage();y=18}
-    y+=8;doc.setFontSize(13);doc.text("Royalty Summary",14,y);y+=7;doc.setFontSize(10);
-    doc.text("Naka वाली entries का Weight: "+num(weightSum)+" MT",14,y);y+=6;
-    doc.text("Royalty Weight: Round("+num(weightSum)+") × 51 = "+num(royaltyWeight),14,y);y+=6;
-    doc.text("Naka जोड़: "+num(nakaSum)+" × 51 = "+num(nakaRoyalty),14,y);y+=6;
-    doc.text("Royalty Difference: "+num(difference),14,y);y+=10;
-
-    doc.setFontSize(13);doc.text("भराव Summary",14,y);y+=7;doc.setFontSize(10);
-    doc.text("Bharav - "+num(bharavCash)+" tractor cash, "+num(bharavUdhar)+" tractor udhar (total "+num(bharavTrips)+" tractor)",14,y);y+=6;
-    doc.text("कुल भराव Amount: ₹"+Number(bharavAmount||0).toLocaleString("en-IN",{maximumFractionDigits:2}),14,y);y+=10;
-    doc.setFontSize(13);doc.text("Naka / Royalty Detail",14,y);y+=7;doc.setFontSize(10);
-    doc.text("Naka वाली Entries: "+nakaRows.length,14,y);y+=6;
-    doc.text("Naka: "+num(nakaRoyalty),14,y);y+=6;
-    doc.text("Matched Weight: "+num(weightSum)+" MT → Round "+Math.round(weightSum)+" × 51 = ₹"+Number(royaltyWeight||0).toLocaleString("en-IN"),14,y);y+=6;
-    doc.text("Royalty Difference: ₹"+Number(difference||0).toLocaleString("en-IN"),14,y);
-    if(bharavRows.length){
-      y+=9;doc.setFontSize(8);doc.text("Date-wise भराव:",14,y);y+=5;
-      bharavRows.slice(0,10).forEach(r=>{doc.text((r.name||"Cash")+" | "+(r.tractors||0)+" Trip | ₹"+Number(r.amount||0).toLocaleString("en-IN",{maximumFractionDigits:2})+" | "+(r.payment||""),14,y);y+=5})
-    }
+    y+=8;doc.setFontSize(12);doc.text("Daily Summary",14,y);y+=7;
+    const summaryX=14,summaryY=y,summaryW=170,rowH=9,col1=110,col2=60;
+    doc.setFontSize(9);
+    doc.rect(summaryX,summaryY,summaryW,rowH);doc.rect(summaryX,summaryY+rowH,summaryW,rowH);
+    doc.line(summaryX+col1,summaryY,summaryX+col1,summaryY+rowH*2);
+    doc.text("Bharav Total Tractor",summaryX+2,summaryY+6);
+    doc.text(num(bharavTrips),summaryX+col1+2,summaryY+6);
+    doc.text("Royalty Difference",summaryX+2,summaryY+rowH+6);
+    doc.text("₹"+Number(difference||0).toLocaleString("en-IN"),summaryX+col1+2,summaryY+rowH+6);
 
     const blob=doc.output("blob");
     const file=new File([blob],"chamunda-office-report-"+String(date).replace(/[^0-9-]/g,"")+".pdf",{type:"application/pdf"});
