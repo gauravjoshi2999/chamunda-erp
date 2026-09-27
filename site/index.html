@@ -514,7 +514,6 @@ function officeBharav(d=today()){
     '<div class="notice"><b>भराव Rate:</b> ₹'+money(rate).replace('₹','')+' प्रति Trip.<br>'+
     (isSubmitted?'<b>🔒 '+dmy(selectedDate)+' की भराव entries Submit हो चुकी हैं। अब Office से Edit/Delete या नई entry नहीं की जा सकती।</b>':'<b>Save के बाद entry Edit/Delete कर सकते हैं। दिन की entries पूरी होने पर Submit करें।')+
     '</div>'+
-    '<div class="panel no-print"><div class="grid"><div class="field"><label>भराव की तारीख</label><input type="date" id="officeBharavViewDate" value="'+selectedDate+'"></div><div class="field" style="align-self:end"><button class="btn primary" style="width:100%;font-weight:800" onclick="officeBharav(document.getElementById(\'officeBharavViewDate\').value)">🔎 उस दिन की Entry देखें</button></div></div></div>'+
     (isSubmitted?'':'<div class="panel"><h3>नई भराव Entry</h3><form id="officeBharavForm"><div class="grid">'+
     field('Date','date','date',selectedDate,'','required')+
     field('Dumper / Trip कितने?','tractors','number','','','required min="1" step="1"')+
@@ -524,6 +523,7 @@ function officeBharav(d=today()){
     '<div class="field" id="officeBharavNameWrap" style="display:none"><label>Udhar किसके नाम?</label><input name="name" id="officeBharavName" list="officeBharavNames" placeholder="नाम चुनें या नया लिखें"><datalist id="officeBharavNames">'+names.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></div>'+
     field('Remark','remark','text','','','')+
     '</div><div class="actions"><button class="btn green" type="submit">✓ Save भराव</button><button class="btn" type="button" onclick="officeBharav()">Clear</button></div></form></div>')+
+    '<div class="panel no-print" style="margin-top:0"><div class="grid"><div class="field"><label>भराव की तारीख देखें</label><input type="date" id="officeBharavViewDate" value="'+selectedDate+'"></div><div class="field" style="align-self:end"><button class="btn primary" type="button" style="width:100%;font-weight:850;box-shadow:0 3px 0 #0f4f9f;cursor:pointer" onclick="officeBharav(document.getElementById(\'officeBharavViewDate\').value)">🔎 उस दिन की Entry देखें</button></div></div></div>'+
     '<div class="panel"><div class="reportgrid"><div class="reportbox">कुल Trip<b>'+trips+'</b></div><div class="reportbox">कुल Amount<b>'+money(amount)+'</b></div><div class="reportbox">Cash<b>'+money(cash)+'</b></div><div class="reportbox">Udhar<b>'+money(udhar)+'</b></div></div></div>'+
     '<div class="panel"><div class="top"><div><h3 style="margin:0">'+dmy(selectedDate)+' का भराव</h3><div class="muted">'+(isSubmitted?'🔒 पूरा दिन Submit हो चुका है':'Pending entries — Submit करने तक Edit/Delete उपलब्ध है')+'</div></div></div><div class="tablewrap"><table><tr><th>Time</th><th>Dumper / Trip</th><th>Rate</th><th>Total</th><th>Payment</th><th>Udhar Name</th><th>Remark</th><th>Action</th></tr>'+
     (tableRows||'<tr><td colspan="8">इस तारीख की कोई भराव entry नहीं है।</td></tr>')+
