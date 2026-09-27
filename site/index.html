@@ -361,7 +361,7 @@ function officeNextSerial(date){
 }
 function currentTime(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 let officePage=sessionStorage.getItem("chamunda_office_page")||"entry";
-async function sendOfficeDayWhatsApp(date){
+async async function sendOfficeDayWhatsApp(date){
   try{
     const rows=(db.officeEntries||[]).filter(x=>x.date===date).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
     if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return}
