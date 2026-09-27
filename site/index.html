@@ -32,7 +32,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 <div class="toast" id="toast"></div>
 <script>
 const KEY="chamunda_erp_v1";
-const ERP_VERSION="V21";
+const ERP_VERSION="V22";
 const FINAL_CUSTOMER_DELETE_V17=true;
 // Chamunda ERP Firebase Live Sync (Firebase Web App config)
 const BUILTIN_FIREBASE_CONFIG={
@@ -165,10 +165,20 @@ let officePage=sessionStorage.getItem("chamunda_office_page")||"entry";
 function officeNav(){
   const n=document.getElementById('officeNav');
   if(!n)return;
-  n.innerHTML='<button class="'+(officePage==='entry'?'active':'')+'" onclick="officePage=\'entry\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeEntry()">📝 Office Entry</button>'+
-             '<button class="'+(officePage==='bharav'?'active':'')+'" onclick="officePage=\'bharav\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeBharav()">🚜 भराव</button>'+
-             '<button class="'+(officePage==='diesel'?'active':'')+'" onclick="officePage=\'diesel\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeDiesel()">⛽ Diesel</button>'+
-             '<button class="danger" onclick="erpLogout()">Logout</button>';
+  n.innerHTML='';
+  n.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding:8px;background:#14202c;border-radius:12px;min-height:56px;align-items:center;';
+  const add=(label,key,fn)=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.textContent=label;
+    btn.style.cssText='display:inline-block!important;visibility:visible!important;opacity:1!important;border:0!important;background:'+(officePage===key?'#2a3a4a':'#203142')+'!important;color:#ffffff!important;border-radius:9px!important;padding:10px 14px!important;font-weight:700!important;font-size:14px!important;min-height:40px!important;';
+    btn.onclick=()=>{officePage=key;sessionStorage.setItem('chamunda_office_page',key);fn();};
+    n.appendChild(btn);
+  };
+  add('📝 Office Entry','entry',officeEntry);
+  add('🚜 भराव','bharav',()=>officeBharav());
+  add('⛽ Diesel','diesel',officeDiesel);
+  add('🚪 Logout','logout',erpLogout);
 }
 function render(){if(userMode==='office'){if(officePage==='bharav')officeBharav();else if(officePage==='diesel')officeDiesel();else officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
