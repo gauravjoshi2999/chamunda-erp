@@ -445,6 +445,18 @@ function goOffice(p){
   sessionStorage.setItem("chamunda_office_page",officePage);
   render();
 }
+function officeSendWhatsApp(){
+  const date=window.officeFilterDate||today();
+  const rows=(db.officeEntries||[]).filter(x=>x.date===date).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
+  if(!rows.length){alert("Aaj ki koi entry nahi hai.");return;}
+  const lines=rows.map(x=>{
+    const wt=x.vehicleType==="Tractor"?("Tractor "+(x.tractorCount||0)):(x.weight??0)+" MT";
+    return (x.serial||"")+" | "+(x.customer||"")+" | "+(x.place||"")+" | "+(x.material||"")+" | "+wt+" | Naka "+(x.naka??"");
+  });
+  const msg="Chamunda ERP - Office Entry\\nDate: "+date+"\\n\\n"+lines.join("\\n");
+  const url="https://wa.me/?text="+encodeURIComponent(msg+"\\n\\nPDF: Daily entry report");
+  window.open(url,"_blank");
+}
 function officeEntry(){
 db.officeEntries??=[];
 const selectedDate=window.officeFilterDate||today();
