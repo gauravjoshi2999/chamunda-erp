@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1769d3">
+<link rel="manifest" href="manifest.json">
+<title>Chamunda ERP V13</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#f3f6f9;color:#17202a;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:flex}
+.side{width:235px;background:#14202c;color:#fff;padding:16px;position:fixed;inset:0 auto 0 0;overflow:auto}.brand{font-weight:900;font-size:21px}.brand small{display:block;font-size:11px;font-weight:500;color:#aeb9c5;margin-top:3px}.nav{margin-top:20px;display:grid;gap:6px}.nav button{border:0;background:transparent;color:#dce5ed;text-align:left;border-radius:10px;padding:12px 13px;font-weight:650}.nav button.active,.nav button:hover{background:#2a3a4a;color:#fff}.main{margin-left:235px;width:calc(100% - 235px);padding:20px;max-width:1600px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.title{font-size:26px;font-weight:850}.muted{color:#687582;font-size:13px}.cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}.card,.panel{background:#fff;border:1px solid #dfe5eb;border-radius:14px;padding:14px;box-shadow:0 2px 8px #00000006}.card .label{color:#6b7782;font-size:12px}.card .num{font-size:23px;font-weight:850;margin-top:5px}.panel{margin-bottom:14px}.panel h2,.panel h3{margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.field label{display:block;font-size:12px;font-weight:750;margin:0 0 5px}.field input,.field select,.field textarea{width:100%;border:1px solid #cbd4dc;border-radius:9px;background:#fff;min-height:43px;padding:9px 10px;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#1769d3;box-shadow:0 0 0 3px #1769d31a}.field textarea{resize:vertical}.span2{grid-column:span 2}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap}.btn{min-height:42px;border:1px solid #cbd4dc;background:#fff;border-radius:9px;padding:9px 14px;font-weight:700}.btn.primary{background:#1769d3;border-color:#1769d3;color:#fff}.btn.green{background:#15803d;border-color:#15803d;color:#fff}.btn.danger{color:#b42318}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:950px}th,td{padding:9px 8px;border-bottom:1px solid #e8edf1;text-align:left;font-size:12px;white-space:nowrap}th{background:#f6f8fa;color:#4e5c68;position:sticky;top:0}.pill{display:inline-block;border-radius:20px;padding:4px 8px;background:#edf4ff;color:#1757a5;font-size:11px;font-weight:700}.pill.cash{background:#eaf8ef;color:#126b34}.pill.udhar{background:#fff2e8;color:#9a4b08}.reportgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.reportbox{border:1px solid #e1e6eb;border-radius:11px;padding:12px;background:#fafbfc}.reportbox b{display:block;font-size:20px;margin-top:4px}.notice{padding:11px 13px;border-radius:10px;background:#eef5ff;color:#174d8d;margin-bottom:12px;font-size:13px}.empty{padding:25px 10px;color:#73808b;text-align:center}.search{max-width:340px}.toast{position:fixed;right:18px;bottom:18px;background:#18232f;color:#fff;padding:12px 15px;border-radius:10px;box-shadow:0 8px 25px #0003;display:none;z-index:20}.install{display:none}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reportgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){.side{position:fixed;z-index:10;bottom:0;top:auto;left:0;right:0;width:100%;height:68px;padding:6px 7px;display:flex;align-items:center}.brand{display:none}.nav{margin:0;display:flex;justify-content:space-around;width:100%;gap:2px}.nav button{padding:8px 7px;text-align:center;font-size:11px;min-width:60px}.main{margin:0;width:100%;padding:12px 10px 82px}.title{font-size:21px}.cards{grid-template-columns:repeat(2,1fr)}.reportgrid{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start}.install{display:block}}
+@media(max-width:470px){.grid{grid-template-columns:1fr}.span2{grid-column:span 1}.cards{grid-template-columns:1fr 1fr}.reportgrid{grid-template-columns:1fr 1fr}.btn{width:auto}}
+.customer-scroll{max-height:65vh;overflow:auto;max-height:62vh;overflow:auto}.customer-scroll table{min-width:720px}
+@media print{.side,.actions,.no-print,.install{display:none!important}.main{margin:0;width:100%;padding:0}.panel{box-shadow:none;border:0}.top{margin-bottom:8px}.tablewrap{overflow:visible}table{min-width:0;width:100%}th,td{font-size:11px;padding:6px 5px}body{background:#fff}.reportbox{border:1px solid #ddd}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand">CHAMUNDA ERP<small>Crusher / Gitti Management</small></div>
+  <div class="nav" id="nav"></div>
+</aside>
+<main class="main" id="app"></main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const KEY="chamunda_erp_v1";
+const ERP_VERSION="V15";
+// Chamunda ERP Firebase Live Sync (Firebase Web App config)
+const BUILTIN_FIREBASE_CONFIG={
+  apiKey:"AIzaSyDK25r1xMH5J_cZiXIC6RSkPs1wfyA8i8Y",
+  authDomain:"chamunda-erp.firebaseapp.com",
+  databaseURL:"https://chamunda-erp-default-rtdb.firebaseio.com",
+  projectId:"chamunda-erp",
+  storageBucket:"chamunda-erp.firebasestorage.app",
+  messagingSenderId:"613859592512",
+  appId:"1:613859592512:web:0ca59647db0a49d60312a5"
+};
+const today=()=>new Date().toISOString().slice(0,10);
+const dmy=d=>{if(!d)return "";let [y,m,dd]=String(d).slice(0,10).split("-");return dd&&m&&y?`${dd}/${m}/${y}`:d};
+const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
+const num=n=>Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:3});
+let db=load();migrate();
+let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
+function blank(){return {sales:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["12 MM","6 MM","20 MM","Dust","M-Sand"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
+function migrate(){
+  db.sales??=[];db.sales.forEach((x,i)=>{x._id??=`sale_${x.serial||i+1}_${x.date||today()}_${i}`});
+  db.customers??=[];db.customerPayments??=[];db.dieselIn??=[];db.bharav??=[];db.royalty??=[];db.settings??={};db.settings.materials??=["12 MM","6 MM","20 MM","Dust","M-Sand"];db.settings.bharavRate??=150;db.settings.requiredFields??={};db.settings.hiddenMenus??=[];db.settings.customFields??=[];db.settings.cloudSync??={enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"};db.settings.cloudSync.path??="chamundaERP/data";db.settings.cloudSync.config??=BUILTIN_FIREBASE_CONFIG;db.settings.cloudSync.enabled??=true;localStorage.setItem(KEY,JSON.stringify(db))}
+function save(){localStorage.setItem(KEY,JSON.stringify(db)); if(db.settings?.cloudSync?.enabled && !cloudWriting) scheduleCloudPush()}
+function cloudStatus(msg,ok=false){let el=document.getElementById('cloudStatus');if(el){el.textContent=msg;el.style.color=ok?'#15803d':'#b45309'}}
+function readInput(id,fallback=''){
+  const el=document.getElementById(id);
+  return el ? String(el.value ?? '').trim() : fallback;
+}
+function getCloudConfig(){return db.settings?.cloudSync?.config||BUILTIN_FIREBASE_CONFIG}
+function scheduleCloudPush(){clearTimeout(cloudPushTimer);cloudPushTimer=setTimeout(cloudPush,150)}
+function ensureFirebaseApp(c){
+  if(!window.firebase) throw new Error('Firebase SDK load नहीं हुआ। Internet connection check करें।');
+  let app=null;
+  try{ app=firebase.app('chamundaERP'); }catch(e){ app=firebase.initializeApp(c,'chamundaERP'); }
+  return app;
+}
+function initCloud(){
+  try{
+    const c=getCloudConfig();
+    if(!c || !c.apiKey || !c.projectId || !c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}
+    if(cloudUnsub){cloudUnsub();cloudUnsub=null;}
+    cloudApp=ensureFirebaseApp(c);
+    const path=(db.settings?.cloudSync?.path||'chamundaERP/data').trim()||'chamundaERP/data';
+    cloudRef=firebase.database(cloudApp).ref(path);
+    cloudReady=false;
+    cloudStatus('● Connecting...',true);
+    cloudUnsub=cloudRef.on('value',snap=>{
+      const remote=snap.val();
+      if(remote && remote.sales){
+        if(cloudWriting) return;
+        cloudWriting=true;
+        db=remote;
+        migrate();
+        localStorage.setItem(KEY,JSON.stringify(db));
+        cloudWriting=false;
+        cloudReady=true;
+        cloudStatus('● Live Sync चालू',true);
+        if(page==='settings') settings(); else render();
+      }else{
+        cloudReady=true;
+        cloudStatus('● Cloud connected — अभी data नहीं है',true);
+        if(db.sales?.length) scheduleCloudPush();
+      }
+    },err=>{
+      cloudReady=false;
+      cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));
+    });
+    return true;
+  }catch(e){cloudReady=false;cloudStatus('⚠ Setup error: '+(e.message||e));return false;}
+}
+function cloudPush(){
+  if(!cloudRef||cloudWriting||!cloudReady)return;
+  const payload=JSON.parse(JSON.stringify(db));
+  cloudWriting=true;
+  cloudStatus('● Cloud में save हो रहा है...',true);
+  cloudRef.set(payload).then(()=>{
+    cloudWriting=false;cloudStatus('● Live Sync चालू',true);
+  }).catch(e=>{
+    cloudWriting=false;cloudStatus('⚠ Sync failed: '+(e.message||'check Rules'));toast('Cloud save नहीं हुआ');
+  });
+}
+function cloudTest(){
+  try{
+    const c={
+      apiKey:readInput('fbApiKey',BUILTIN_FIREBASE_CONFIG.apiKey),
+      authDomain:readInput('fbAuthDomain',BUILTIN_FIREBASE_CONFIG.authDomain),
+      databaseURL:readInput('fbDatabaseURL',BUILTIN_FIREBASE_CONFIG.databaseURL),
+      projectId:readInput('fbProjectId',BUILTIN_FIREBASE_CONFIG.projectId),
+      storageBucket:readInput('fbStorageBucket',BUILTIN_FIREBASE_CONFIG.storageBucket),
+      messagingSenderId:readInput('fbMessagingSenderId',BUILTIN_FIREBASE_CONFIG.messagingSenderId),
+      appId:readInput('fbAppId',BUILTIN_FIREBASE_CONFIG.appId)
+    };
+    if(!c.apiKey||!c.projectId||!c.databaseURL||!c.appId){cloudStatus('⚠ API Key, Project ID, Database URL और App ID जरूरी हैं');return;}
+    const app=ensureFirebaseApp(c);
+    const path=readInput('fbPath',db.settings?.cloudSync?.path||'chamundaERP/data')||'chamundaERP/data';
+    const testRef=firebase.database(app).ref(path);
+    cloudStatus('● Connection test हो रहा है...',true);
+    testRef.once('value').then(()=>{
+      cloudStatus('✓ Cloud connection OK',true);toast('Cloud connection OK');
+    }).catch(e=>{cloudStatus('⚠ Cloud connection failed: '+(e.message||e));});
+  }catch(e){cloudStatus('⚠ Setup error: '+(e.message||e));}
+}
+function cloudSaveConfig(){
+  try{
+    const c={
+      apiKey:readInput('fbApiKey',BUILTIN_FIREBASE_CONFIG.apiKey),
+      authDomain:readInput('fbAuthDomain',BUILTIN_FIREBASE_CONFIG.authDomain),
+      databaseURL:readInput('fbDatabaseURL',BUILTIN_FIREBASE_CONFIG.databaseURL),
+      projectId:readInput('fbProjectId',BUILTIN_FIREBASE_CONFIG.projectId),
+      storageBucket:readInput('fbStorageBucket',BUILTIN_FIREBASE_CONFIG.storageBucket),
+      messagingSenderId:readInput('fbMessagingSenderId',BUILTIN_FIREBASE_CONFIG.messagingSenderId),
+      appId:readInput('fbAppId',BUILTIN_FIREBASE_CONFIG.appId)
+    };
+    if(!c.apiKey||!c.projectId||!c.databaseURL||!c.appId){alert('Api Key, Project ID, Database URL और App ID जरूरी हैं।');return;}
+    const path=readInput('fbPath',db.settings?.cloudSync?.path||'chamundaERP/data')||'chamundaERP/data';
+    db.settings.cloudSync={enabled:true,config:c,path:path};
+    localStorage.setItem(KEY,JSON.stringify(db));
+    if(!initCloud())return;
+    toast('Cloud Sync connect हो गया');
+    cloudRef.once('value').then(s=>{
+      if(!s.exists()){cloudReady=true;cloudPush();return;}
+      if(confirm('Cloud में पहले से data है। OK = Cloud का data इस device में लें; Cancel = इस device का data Cloud में upload करें।')){
+        const remote=s.val();
+        if(remote){cloudWriting=true;db=remote;migrate();localStorage.setItem(KEY,JSON.stringify(db));cloudWriting=false;cloudReady=true;settings();toast('Cloud data load हो गया');}
+      }else cloudPush();
+    }).catch(e=>cloudStatus('⚠ Cloud read failed: '+(e.message||e)));
+  }catch(e){cloudStatus('⚠ Setup error: '+(e.message||e));}
+}
+function cloudDisconnect(){
+  if(cloudUnsub){cloudUnsub();cloudUnsub=null;}
+  cloudRef=null;cloudApp=null;cloudReady=false;
+  db.settings.cloudSync.enabled=false;
+  localStorage.setItem(KEY,JSON.stringify(db));
+  settings();toast('Cloud Sync बंद हो गया');
+}
+function toast(s){let t=document.getElementById("toast");t.textContent=s;t.style.display="block";setTimeout(()=>t.style.display="none",1800)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+const pages=[["dashboard","🏠","Dashboard"],["sale","🚛","Sale Entry"],["customers","👥","Customers / Khata"],["bharav","🚜","भराव"],["royalty","📜","Royalty"],["diesel","⛽","Diesel"],["reports","📊","Reports"],["backup","💾","Backup"],["settings","⚙️","Settings"]];
+let page="dashboard";
+function nav(){document.getElementById("nav").innerHTML=pages.filter(p=>p[0]==="settings"||!(db.settings.hiddenMenus||[]).includes(p[0])).map(p=>`<button class="${page===p[0]?"active":""}" onclick="go('${p[0]}')">${p[1]} ${p[2]}</button>`).join("")}
+function go(p){page=p;nav();render()}
+function field(label,name,type="text",value="",extra="",attrs=""){return `<div class="field ${extra}"><label>${label}</label><input name="${name}" type="${type}" value="${esc(value)}" ${attrs}></div>`}
+function select(label,name,opts,value=""){return `<div class="field"><label>${label}</label><select required name="${name}">${opts.map(x=>`<option ${x===value?"selected":""}>${esc(x)}</option>`).join("")}</select></div>`}
+function header(title,sub,button=""){return `<div class="top"><div><div class="title">${title}</div><div class="muted">${sub}</div></div>${button}</div>`}
+function render(){nav();({dashboard:dash,sale,sale:bla,bharav,royalty,diesel,reports,backup}[page]||dash)();if(page==="sale")sale();} 
+// explicit dispatcher avoids shorthand ambiguity
+function render(){nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
+function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
+function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
+function totals(){let sales=db.sales;return{entries:sales.length,weight:sales.reduce((a,x)=>a+Number(x.weight||0),0),amount:sales.reduce((a,x)=>a+Number(x.total||0),0),cash:sales.filter(x=>x.payment==="Cash").reduce((a,x)=>a+Number(x.total||0),0),udhar:sales.filter(x=>x.payment==="Udhar").reduce((a,x)=>a+Number(x.total||0),0)}}
+function dash(){let t=totals(), b=db.bharav.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.tractors||0),0),ri=db.dieselIn.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.litres||0),0);document.getElementById("app").innerHTML=header("Office Dashboard","आज की entry के लिए आसान screen",`<button class="btn primary" onclick="go('sale')">+ नई Sale Entry</button>`)
++`<div class="cards"><div class="card"><div class="label">आज की Sale Entries</div><div class="num">${t.entries}</div></div><div class="card"><div class="label">Total Weight</div><div class="num">${num(t.weight)} MT</div></div><div class="card"><div class="label">Total Sale</div><div class="num">${money(t.amount)}</div></div><div class="card"><div class="label">Cash</div><div class="num">${money(t.cash)}</div></div><div class="card"><div class="label">Udhar</div><div class="num">${money(t.udhar)}</div></div></div>`
++`<div class="panel"><h3>आज का छोटा सारांश</h3><div class="reportgrid"><div class="reportbox">भराव Tractor<b>${b}</b></div><div class="reportbox">Royalty Difference<b>${num(db.royalty.filter(x=>x.date===today()).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0))} MT</b></div><div class="reportbox">Diesel आया<b>${num(ri)} L</b></div></div></div>`
++`<div class="panel"><h3>Entry करने का आसान तरीका</h3><div class="notice">पहले Customer चुनें/नाम लिखें → Material चुनें → Weight डालें → Rate डालें → Payment में Cash या Udhar चुनें → <b>Save Entry</b> दबाएँ। Total अपने-आप निकलेगा।</div><div class="muted">गलती हो जाए तो Daily Register में उस row को Delete करके सही entry दोबारा कर सकते हैं।</div></div>`}
+function sale(){let rows=db.sales.slice().reverse(),names=[...new Set(db.customers.map(c=>c.name).concat(db.sales.map(x=>x.customer)))].filter(Boolean),cf=db.settings.customFields||[];document.getElementById("app").innerHTML=header("Daily Sale / Dispatch Entry","Date calendar से चुनें — पुराने customer option में मिलेंगे",`<button class="btn" onclick="go('reports')">📊 Report</button>`)
++`<div class="panel"><h3>नई Sale Entry</h3><div class="notice">Weight: <b>9</b> = 9 MT, <b>9000</b> = 9 MT, <b>9.000</b> = 9 MT. Decimal के साथ लिखा weight उसी MT में माना जाएगा। <b>Total = Weight × Rate</b> और amount 2 decimal तक होगा। अगर एक ही customer की एक से ज्यादा गाड़ी/load हो, तो पहली entry save करने के बाद <b>Save & Add Same Customer</b> दबाएँ — Customer Name फिर से भरना नहीं पड़ेगा।</div><form id="saleForm"><div class="grid">
+${field("Serial No. (Auto)","serial","text",nextSerial(),"","readonly")}
+${field("Date (DD/MM/YYYY)","date","date",today(),"",req("date"))}
+${field("RST No.","rst","text","","",req("rst"))}
+<div class="field"><label>Customer Name</label><input name="customer" list="customerNames" autocomplete="off" ${req("customer")}><datalist id="customerNames">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist></div>
+${select("Material","material",db.settings.materials)}
+${field("Place","place","text","","",req("place"))}
+${field("Weight (MT)","weight","text","","",req("weight")+" inputmode=\"decimal\" pattern=\"[0-9]+([.][0-9]{1,3})?\" title=\"9, 9000 या 9.000 लिख सकते हैं\"")}
+${field("Rate","rate","number","","",req("rate")+" min=\"0\" step=\"0.01\"")}
+${field("Total (Auto)","totalPreview","text","","","readonly")}
+${field("Vehicle Number","vehicle","text","","",req("vehicle"))}
+${field("Naka Parchi","naka","text","","",req("naka"))}
+${field("Mobile Number","mobile","tel","","",req("mobile")+" pattern=\"[0-9]{10}\" maxlength=\"10\" minlength=\"10\" inputmode=\"numeric\" title=\"10 digit mobile number डालें\"")}
+${select("Payment","payment",["Cash","Udhar"])}
+${field("Remark","remark","text","","span2",req("remark"))}
+${cf.map(f=>field(f.label,f.key,f.type||"text","",f.span2?"span2":f.key,f.required!==false?"required":"")).join("")}
+</div><div class="actions"><button type="reset" class="btn">Clear</button><button type="submit" class="btn green">✓ Save Entry</button><button type="button" class="btn primary" onclick="saveSaleAndAddSameCustomer()">✓ Save & Add Same Customer</button></div></form></div>`
++`<div class="panel"><div class="top"><h3 style="margin:0">Sale Register</h3><input class="search" id="saleSearch" placeholder="Customer / RST / Vehicle खोजें"></div><div id="saleTable">${saleTable(rows)}</div></div>`;
+const form=document.getElementById("saleForm"),w=form.elements.weight,r=form.elements.rate,tp=form.elements.totalPreview;function normalizeWeight(raw){const s=String(raw||'').trim();const n=Number(s);if(!s||!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
+function calcSale(){let mt=normalizeWeight(w.value);tp.value=(mt!==null&&Number.isFinite(+r.value))?'₹'+Number((mt*r.value).toFixed(2)).toLocaleString('en-IN',{minimumFractionDigits:2}):''}w.oninput=calcSale;r.oninput=calcSale;calcSale();
+form.onsubmit=e=>{e.preventDefault();saveSaleFromForm(false)};
+document.getElementById("saleSearch").oninput=e=>document.getElementById("saleTable").innerHTML=saleTable(rows.filter(x=>(x.customer+" "+x.rst+" "+x.vehicle).toLowerCase().includes(e.target.value.toLowerCase())))}
+function saveSaleFromForm(keepCustomer){const form=document.getElementById('saleForm');if(!form)return;if(!form.reportValidity())return false;let x=Object.fromEntries(new FormData(form));if(req("mobile")&&!/^[0-9]{10}$/.test(x.mobile||"")){alert("Mobile number 10 digit का होना चाहिए");return false}let mt=normalizeWeight(x.weight);if(mt===null){alert("Weight सही डालें");return false}x.weight=mt;x.rate=+x.rate||0;x.total=Number((x.weight*x.rate).toFixed(2));x.date=x.date||today();x.serial=nextSerial();delete x.totalPreview;x._id=`sale_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;db.sales.push(x);if(x.customer&&!db.customers.some(c=>c.name.toLowerCase()===x.customer.trim().toLowerCase()))db.customers.push({name:x.customer.trim(),mobile:x.mobile||"",created:x.date});save();toast(keepCustomer?'Entry save हो गई — अब इसी Customer की दूसरी entry भरें':'Entry save हो गई');if(keepCustomer){const keep={customer:x.customer,mobile:x.mobile||'',place:x.place||'',material:x.material||'',rate:x.rate||'',vehicle:x.vehicle||'',payment:x.payment||'Cash'};sale();const f=document.getElementById('saleForm');if(f){['customer','mobile','place','vehicle','rate'].forEach(k=>{if(f.elements[k])f.elements[k].value=keep[k]||''});if(f.elements.material)f.elements.material.value=keep.material;if(f.elements.payment)f.elements.payment.value=keep.payment;const w=f.elements.weight,t=f.elements.totalPreview;if(w){w.value='';if(t)t.value='';}}}else sale();return true}
+function saveSaleAndAddSameCustomer(){saveSaleFromForm(true)}
+function saleTable(rows){if(!rows.length)return `<div class="empty">आज अभी कोई entry नहीं है।</div>`;return `<div class="tablewrap"><table><tr><th>S.No.</th><th>RST</th><th>Customer</th><th>Material</th><th>Place</th><th>Weight</th><th>Rate</th><th>Total</th><th>Vehicle</th><th>Payment</th><th>Action</th></tr>${rows.map((x,i)=>`<tr><td>${esc(x.serial||i+1)}</td><td>${esc(x.rst)}</td><td>${esc(x.customer)}</td><td><span class="pill">${esc(x.material)}</span></td><td>${esc(x.place)}</td><td>${num(x.weight)} MT</td><td>${money(x.rate)}</td><td><b>${money(x.total)}</b></td><td>${esc(x.vehicle)}</td><td><span class="pill ${x.payment==="Cash"?"cash":"udhar"}">${x.payment}</span></td><td><button class="btn" onclick="editSale(${db.sales.indexOf(x)})">Edit</button><button class="btn" onclick="sameCustomerSale(${db.sales.indexOf(x)})">+ Same Customer</button><button class="btn danger" onclick="delSale('${x.date}',${db.sales.indexOf(x)})">Delete</button></td></tr>`).join("")}</table></div>`}
+function delSale(d,i){if(confirm("यह entry delete करनी है?")){db.sales.splice(i,1);save();sale();toast("Entry delete हो गई")}}
+function sameCustomerSale(i){const x=db.sales[i];if(!x)return;sale();const f=document.getElementById('saleForm');if(!f)return;['customer','mobile','place','vehicle','rate'].forEach(k=>{if(f.elements[k])f.elements[k].value=x[k]||''});if(f.elements.material)f.elements.material.value=x.material||'';if(f.elements.payment)f.elements.payment.value=x.payment||'Cash';if(f.elements.weight)f.elements.weight.value='';if(f.elements.totalPreview)f.elements.totalPreview.value='';f.elements.rst?.focus();toast('इसी Customer की नई entry के लिए form तैयार है')}
+function editSale(i){const x=db.sales[i];if(!x)return;const cf=db.settings.customFields||[];const names=[...new Set(db.customers.map(c=>c.name).concat(db.sales.map(s=>s.customer)))].filter(Boolean);const modal=document.createElement('div');modal.className='modal-backdrop';modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:120;display:grid;place-items:center;padding:12px';modal.innerHTML=`<div class="panel" style="width:min(760px,100%);max-height:92vh;overflow:auto"><div class="top"><div><h3 style="margin:0">Sale Entry Edit करें</h3><div class="muted">यहाँ वही सभी fields हैं जो Sale Entry में भरते हैं। Date भी बदली जा सकती है।</div></div><button class="btn" type="button" onclick="this.closest('.modal-backdrop').remove()">✕</button></div><form id="editSaleForm"><div class="grid">
+${field("Serial No. (Auto)","serial","text",x.serial||i+1,"","readonly")}
+${field("Date (DD/MM/YYYY)","date","date",x.date||today(),"",req("date"))}
+${field("RST No.","rst","text",x.rst||"","",req("rst"))}
+<div class="field"><label>Customer Name</label><input name="customer" list="editCustomerNames" value="${esc(x.customer||"")}" autocomplete="off" ${req("customer")}><datalist id="editCustomerNames">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist></div>
+${select("Material","material",db.settings.materials,x.material||"")}
+${field("Place","place","text",x.place||"","",req("place"))}
+${field("Weight (MT)","weight","text",x.weight??"","",req("weight")+" inputmode=\"decimal\"")}
+${field("Rate","rate","number",x.rate??"","",req("rate")+" min=\"0\" step=\"0.01\"")}
+${field("Total (Auto)","totalPreview","text",money(x.total||0),"","readonly")}
+${field("Vehicle Number","vehicle","text",x.vehicle||"","",req("vehicle"))}
+${field("Naka Parchi","naka","text",x.naka||"","",req("naka"))}
+${field("Mobile Number","mobile","tel",x.mobile||"","",req("mobile")+" pattern=\"[0-9]{10}\" maxlength=\"10\" minlength=\"10\" inputmode=\"numeric\"")}
+${select("Payment","payment",["Cash","Udhar"],x.payment||"Cash")}
+${field("Remark","remark","text",x.remark||"","span2",req("remark"))}
+${cf.map(f=>field(f.label,f.key,f.type||"text",x[f.key]??"",f.span2?"span2":f.key,f.required!==false?"required":"")).join("")}
+</div><div class="actions"><button type="button" class="btn" onclick="this.closest('.modal-backdrop').remove()">Cancel</button><button class="btn green">✓ Update Entry</button></div></form></div>`;document.body.appendChild(modal);const ef=document.getElementById('editSaleForm'),ew=ef.elements.weight,er=ef.elements.rate,et=ef.elements.totalPreview;const editCalc=()=>{const mt=normalizeWeight(ew.value);et.value=(mt!==null&&Number.isFinite(+er.value))?'₹'+Number((mt*er.value).toFixed(2)).toLocaleString('en-IN',{minimumFractionDigits:2}):''};ew.oninput=editCalc;er.oninput=editCalc;editCalc();ef.onsubmit=e=>{e.preventDefault();if(!ef.reportValidity())return;if(req('mobile')&&!/^[0-9]{10}$/.test(ef.elements.mobile.value||'')){alert('Mobile number 10 digit का होना चाहिए');return}const mt=normalizeWeight(ef.elements.weight.value);if(mt===null){alert('Weight सही डालें');return}const updated=Object.fromEntries(new FormData(ef));updated.weight=mt;updated.rate=Number(updated.rate)||0;updated.total=Number((updated.weight*updated.rate).toFixed(2));updated.serial=x.serial;updated._id=x._id;Object.keys(x).forEach(k=>{if(!(k in updated)&&k!=='_id')updated[k]=x[k]});db.sales[i]=updated;if(updated.customer&&!db.customers.some(c=>c.name.toLowerCase()===updated.customer.trim().toLowerCase()))db.customers.push({name:updated.customer.trim(),mobile:updated.mobile||'',created:updated.date||today()});save();modal.remove();toast('Entry update हो गई');sale()}}
+function customers(){let names=[...new Set(db.customers.map(c=>c.name).concat(db.sales.map(x=>x.customer)))].filter(Boolean);let rows=names.map(name=>{let sale=db.sales.filter(x=>x.customer===name&&x.payment==="Udhar").reduce((a,x)=>a+(+x.total||0),0);let paid=db.customerPayments.filter(x=>x.customer===name).reduce((a,x)=>a+(+x.amount||0),0);return {name,udhar:sale,paid,balance:Math.max(0,sale-paid)}});document.getElementById("app").innerHTML=header("Customers / Khata","हर customer का Udhar और जमा पैसा एक जगह",`<button class="btn primary" onclick="openCustomerPayment()">+ पैसा जमा करें</button>`)+`<div class="panel"><div class="notice">Main Sale में पुराना customer नाम option में आता रहेगा। Udhar Sale अपने-आप खाते में जुड़ती जाएगी। Customer list scroll करके किसी भी customer को खोल सकते हैं।</div><div class="customer-scroll"><table><tr><th>Customer</th><th>कुल Udhar</th><th>जमा</th><th>बाकी</th><th>Action</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${money(r.udhar)}</td><td>${money(r.paid)}</td><td><b>${money(r.balance)}</b></td><td><button class="btn" onclick='openCustomerLedger(${JSON.stringify(r.name)})'>खाता देखें</button></td></tr>`).join("")||'<tr><td colspan="5">अभी कोई customer नहीं है।</td></tr>'}</table></div></div>`}
+function openCustomerPayment(){let names=[...new Set(db.customers.map(c=>c.name).concat(db.sales.map(x=>x.customer)))].filter(Boolean).sort((a,b)=>a.localeCompare(b));let box=document.createElement('div');box.className='modal-backdrop';box.style.cssText='position:fixed;inset:0;background:#0007;z-index:99;display:grid;place-items:center;padding:15px';box.innerHTML=`<div class="panel" style="width:min(560px,100%);max-height:85vh;overflow:auto"><h3>Customer चुनें — पैसा जमा</h3><input id="payNameSearch" placeholder="नाम खोजें" style="width:100%;padding:10px;margin-bottom:8px"><div id="payNameList" style="max-height:40vh;overflow:auto;border:1px solid #ddd;border-radius:8px">${names.map(n=>`<button type="button" class="btn" style="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #eee" onclick="selectPayName(${JSON.stringify(n)})">${esc(n)}</button>`).join('')||'<p class="empty">कोई customer नहीं</p>'}</div><div class="grid" style="margin-top:12px"><div class="field"><label>जमा तारीख</label><input id="payDate" type="date" value="${today()}"></div><div class="field"><label>रकम</label><input id="payAmount" type="number" min="0.01" step="0.01"></div><div class="field span2"><label>Remark (वैकल्पिक)</label><input id="payNote"></div></div><div class="actions"><button class="btn" onclick="this.closest('.modal-backdrop').remove()">Cancel</button><button class="btn green" onclick="saveCustomerPayment()">जमा Save करें</button></div><div id="selectedPayName" class="notice">पहले customer चुनें</div></div>`;document.body.appendChild(box);window._payName='';document.getElementById('payNameSearch').oninput=e=>{let q=e.target.value.toLowerCase();document.querySelectorAll('#payNameList button').forEach(b=>b.style.display=b.textContent.toLowerCase().includes(q)?'block':'none')}}
+function selectPayName(n){window._payName=n;document.getElementById('selectedPayName').textContent='चुना गया: '+n}
+function saveCustomerPayment(){let name=window._payName,amount=Number(document.getElementById('payAmount').value),date=document.getElementById('payDate').value;if(!name)return alert('Customer चुनें');if(!amount||amount<=0||!date)return alert('Date और सही amount भरें');db.customerPayments.push({date,customer:name,amount:Number(amount.toFixed(2)),note:document.getElementById('payNote').value||''});save();document.querySelector('.modal-backdrop')?.remove();toast('जमा पैसा save हो गया');customers()}
+function openCustomerLedger(name,fromDate,toDate){let allDates=[...db.sales.filter(x=>x.customer===name&&x.payment==="Udhar").map(x=>x.date),...db.customerPayments.filter(x=>x.customer===name).map(x=>x.date)].sort();let now=today(),defaultFrom=now.slice(0,8)+"01",from=fromDate||defaultFrom,to=toDate||now;if(from>to)return alert("From Date, To Date से पहले होनी चाहिए");let saleAll=db.sales.filter(x=>x.customer===name&&x.payment==="Udhar"),payAll=db.customerPayments.filter(x=>x.customer===name),openingUdhar=saleAll.filter(x=>x.date<from).reduce((a,x)=>a+(+x.total||0),0),openingPaid=payAll.filter(x=>x.date<from).reduce((a,x)=>a+(+x.amount||0),0),openingBalance=openingUdhar-openingPaid,sale=saleAll.filter(x=>x.date>=from&&x.date<=to),payments=payAll.filter(x=>x.date>=from&&x.date<=to),periodUdhar=sale.reduce((a,x)=>a+(+x.total||0),0),periodPaid=payments.reduce((a,x)=>a+(+x.amount||0),0),closing=openingBalance+periodUdhar-periodPaid;document.getElementById("app").innerHTML=header(name,"Customer Khata — Date wise पूरा हिसाब",`<button class="btn" onclick="go('customers')">← Customer List</button> <button class="btn no-print" onclick="openCustomerLedger(${JSON.stringify(name)},'0001-01-01',today())">पूरा खाता</button> <button class="btn no-print" onclick="estimateBill(${JSON.stringify(name)},${JSON.stringify(from)},${JSON.stringify(to)})">🧾 Estimate Bill</button> <button class="btn primary no-print" onclick="window.print()">📄 PDF / Print</button>`)+`<div class="panel no-print"><div class="grid"><div class="field"><label>From Date (DD/MM/YYYY)</label><input id="khataFrom" type="date" value="${from}"></div><div class="field"><label>To Date (DD/MM/YYYY)</label><input id="khataTo" type="date" value="${to}"></div><div class="field" style="align-self:end"><button class="btn green" onclick="openCustomerLedger(${JSON.stringify(name)},document.getElementById('khataFrom').value,document.getElementById('khataTo').value)">रिपोर्ट दिखाएँ</button></div></div><div class="notice">जैसे पिछले महीने का हिसाब चाहिए, From Date और To Date डालें। PDF में इसी अवधि का पूरा हिसाब और उस अवधि में जमा किया पैसा भी आएगा।</div></div><div class="reportgrid"><div class="reportbox">पहले का बाकी<b>${money(openingBalance)}</b></div><div class="reportbox">इस अवधि का Udhar<b>${money(periodUdhar)}</b></div><div class="reportbox">इस अवधि में जमा<b>${money(periodPaid)}</b></div><div class="reportbox">अंतिम बाकी<b>${money(closing)}</b></div></div><div class="panel"><h3>Udhar Sale — ${from} से ${to}</h3><div class="tablewrap"><table><tr><th>Date</th><th>Material</th><th>Weight</th><th>Rate</th><th>Amount</th></tr>${sale.map(x=>`<tr><td>${dmy(x.date)}</td><td>${esc(x.material)}</td><td>${num(x.weight)} MT</td><td>${money(x.rate)}</td><td>${money(x.total)}</td></tr>`).join("")||'<tr><td colspan="5">इस अवधि में कोई Udhar Sale नहीं।</td></tr>'}<tr><th colspan="4">इस अवधि का Udhar Total</th><th>${money(periodUdhar)}</th></tr></table></div></div><div class="panel"><h3>जमा Payment — ${from} से ${to}</h3><div class="tablewrap"><table><tr><th>Date</th><th>Amount</th></tr>${payments.map(x=>`<tr><td>${dmy(x.date)}</td><td>${money(x.amount)}</td></tr>`).join("")||'<tr><td colspan="2">इस अवधि में कोई जमा payment नहीं।</td></tr>'}<tr><th>इस अवधि में कुल जमा</th><th>${money(periodPaid)}</th></tr></table></div></div>`}
+function estimateBill(name,from,to){let sale=db.sales.filter(x=>x.customer===name&&x.date>=from&&x.date<=to),total=sale.reduce((a,x)=>a+(+x.total||0),0),weight=sale.reduce((a,x)=>a+(+x.weight||0),0);document.getElementById('app').innerHTML=header('ESTIMATE BILL',`${esc(name)} — ${dmy(from)} से ${dmy(to)}`,`<button class="btn no-print" onclick="openCustomerLedger(${JSON.stringify(name)},${JSON.stringify(from)},${JSON.stringify(to)})">← Khata</button> <button class="btn primary no-print" onclick="window.print()">🖨 Print / PDF</button>`)+`<div class="panel" style="text-align:center"><h1 style="margin:5px">ESTIMATE</h1><p><b>Customer:</b> ${esc(name)}</p><p>${dmy(from)} से ${dmy(to)}</p></div><div class="panel"><table><tr><th>Date</th><th>Material</th><th>Weight</th><th>Rate</th><th>Total</th></tr>${sale.map(x=>`<tr><td>${dmy(x.date)}</td><td>${esc(x.material)}</td><td>${num(x.weight)} MT</td><td>${money(x.rate)}</td><td>${money(x.total)}</td></tr>`).join('')||'<tr><td colspan="5">कोई Sale नहीं</td></tr>'}<tr><th colspan="2">कुल</th><th>${num(weight)} MT</th><th></th><th>${money(total)}</th></tr></table></div><div class="panel"><h2>कुल हिसाब: ${money(total)}</h2><p class="muted">यह केवल अनुमानित/हिसाब दिखाने वाला Estimate है। इसमें GST शामिल नहीं है।</p></div>`}
+function bharav(d=today()){let todayRows=db.bharav.filter(x=>x.date===d),tr=todayRows.reduce((a,x)=>a+(+x.tractors||0),0),rate=Number(db.settings.bharavRate??150),cash=todayRows.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(+x.amount||0),0),udhar=todayRows.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(+x.amount||0),0),names=[...new Set(db.bharav.filter(x=>x.name).map(x=>x.name))];document.getElementById('app').innerHTML=header('भराव','बस Tractor संख्या और Cash / Udhar चुनें',`<button class="btn" onclick="go('reports')">📊 Report</button>`)+
+`<div class="panel no-print"><div class="grid"><div class="field"><label>भराव की तारीख देखें</label><input type="date" id="bharavViewDate" value="${d}"></div><div class="field" style="align-self:end"><button class="btn" onclick="bharav(document.getElementById('bharavViewDate').value)">उस दिन की Entry देखें</button></div></div></div><div class="panel"><div class="notice"><b>भराव Rate:</b> ₹${money(rate).replace('₹','')} प्रति Tractor &nbsp; <button type="button" class="btn no-print" onclick="editBharavRate()">Rate Edit करें</button><br><span class="muted">Default rate ₹150 है। Rate बदलने पर आगे की entries उसी rate से बनेंगी।</span></div><form id="bharavForm"><div class="grid">${field('Date','date','date',today(),'','required')}${field('Tractor कितने गए?','tractors','number','','','required min="1" step="1"')}${select('Payment','payment',['Cash','Udhar'])}<div class="field" id="bharavNameWrap" style="display:none"><label>Udhar किसके नाम?</label><input name="name" id="bharavName" list="bharavNames" placeholder="नाम चुनें या नया लिखें"><datalist id="bharavNames">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div></div><div class="actions"><button class="btn green">✓ Save भराव</button></div></form></div>
+<div class="panel"><div class="reportgrid"><div class="reportbox">आज के Tractor<b>${tr}</b></div><div class="reportbox">Rate<b>${money(rate)}</b></div><div class="reportbox">Cash<b>${money(cash)}</b></div><div class="reportbox">Udhar<b>${money(udhar)}</b></div></div></div>
+<div class="panel"><h3>आज का भराव</h3><div class="tablewrap"><table><tr><th>Time</th><th>Tractor</th><th>Rate</th><th>Total</th><th>Payment</th><th>Udhar Name</th></tr>${todayRows.slice().reverse().map(x=>`<tr><td>${esc(x.time||'')}</td><td>${x.tractors}</td><td>${money(x.rate)}</td><td>${money(x.amount)}</td><td>${esc(x.payment)}</td><td>${esc(x.name||'-')}</td></tr>`).join('')||'<tr><td colspan="6">आज अभी कोई entry नहीं है।</td></tr>'}</table></div></div><div class="panel"><h3>भराव Udhar Khata</h3><button class="btn primary" onclick="openBharavPayment()">+ भराव का पैसा जमा करें</button><div class="grid"><div class="field"><label>नाम चुनें</label><select id="bharavLedgerName">${names.map(n=>`<option>${esc(n)}</option>`).join('')}</select></div><div class="field"><label>From Date (DD/MM/YYYY)</label><input type="date" id="bharavFrom" value="${today().slice(0,8)}01"></div><div class="field"><label>To Date (DD/MM/YYYY)</label><input type="date" id="bharavTo" value="${today()}"></div><div class="field" style="align-self:end"><button class="btn" onclick="bharavLedger(document.getElementById('bharavLedgerName').value,document.getElementById('bharavFrom').value,document.getElementById('bharavTo').value)">खाता देखें</button></div></div></div>`;
+const form=document.getElementById('bharavForm'), payment=form.elements.payment, wrap=document.getElementById('bharavNameWrap'), nameInput=document.getElementById('bharavName');function sync(){let u=payment.value==='Udhar';wrap.style.display=u?'block':'none';nameInput.required=u;if(!u)nameInput.value=''}payment.onchange=sync;sync();form.onsubmit=e=>{e.preventDefault();if(!e.target.reportValidity())return;let x=Object.fromEntries(new FormData(e.target)),r=Number(db.settings.bharavRate??150);x.tractors=+x.tractors;x.rate=r;x.amount=Number((x.tractors*r).toFixed(2));x.name=x.payment==='Udhar'?(x.name||'').trim():'';x.time=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});db.bharav.push(x);save();toast('भराव save हो गया');bharav()}}
+function openBharavPayment(){let names=[...new Set(db.bharav.filter(x=>x.payment==='Udhar'&&x.name).map(x=>x.name))].sort();if(!names.length)return alert('अभी कोई भराव Udhar नाम नहीं है');let box=document.createElement('div');box.className='bharav-pay-backdrop';box.style.cssText='position:fixed;inset:0;background:#0007;z-index:99;display:grid;place-items:center;padding:15px';box.innerHTML=`<div class="panel" style="width:min(480px,100%);max-height:85vh;overflow:auto"><h3>भराव Udhar जमा</h3><div class="field"><label>नाम चुनें</label><select id="bpName">${names.map(n=>`<option>${esc(n)}</option>`).join('')}</select></div><div class="field"><label>तारीख</label><input id="bpDate" type="date" value="${today()}"></div><div class="field"><label>जमा रकम</label><input id="bpAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>Remark</label><input id="bpNote"></div><div class="actions"><button class="btn" onclick="this.closest('.bharav-pay-backdrop').remove()">Cancel</button><button class="btn green" onclick="let n=document.getElementById('bpName').value,a=Number(document.getElementById('bpAmount').value),d=document.getElementById('bpDate').value,t=document.getElementById('bpNote').value;if(!a||a<=0||!d){alert('तारीख और सही रकम भरें');return}saveBharavPayment(n,a,d,t);document.querySelector('.bharav-pay-backdrop').remove();toast('भराव जमा save हो गया');bharav()">जमा Save</button></div></div>`;document.body.appendChild(box)}
+function bharavLedger(name,from,to){if(!name)return alert('Udhar नाम चुनें');let all=db.bharav.filter(x=>x.payment==='Udhar'&&x.name===name),a=all.filter(x=>x.date<from).reduce((n,x)=>n+(+x.amount||0),0),rows=all.filter(x=>x.date>=from&&x.date<=to),paid=db.bharavPayments||[],pp=paid.filter(x=>x.name===name&&x.date<from).reduce((n,x)=>n+(+x.amount||0),0),periodPaid=paid.filter(x=>x.name===name&&x.date>=from&&x.date<=to).reduce((n,x)=>n+(+x.amount||0),0),due=rows.reduce((n,x)=>n+(+x.amount||0),0),closing=a-pp+due-periodPaid;document.getElementById('app').innerHTML=header('भराव खाता — '+esc(name),from+' से '+to,`<button class="btn" onclick="go('bharav')">← भराव</button> <button class="btn primary no-print" onclick="window.print()">PDF / Print</button>`)+`<div class="reportgrid"><div class="reportbox">पहले का बाकी<b>${money(a-pp)}</b></div><div class="reportbox">इस अवधि का Udhar<b>${money(due)}</b></div><div class="reportbox">इस अवधि में जमा<b>${money(periodPaid)}</b></div><div class="reportbox">अंतिम बाकी<b>${money(closing)}</b></div></div><div class="panel"><h3>Udhar Entries</h3><table><tr><th>Date</th><th>Tractor</th><th>Rate</th><th>Amount</th></tr>${rows.map(x=>`<tr><td>${dmy(x.date)}</td><td>${x.tractors}</td><td>${money(x.rate)}</td><td>${money(x.amount)}</td></tr>`).join('')||'<tr><td colspan="4">कोई entry नहीं</td></tr>'}</table></div><div class="panel"><h3>जमा</h3><table><tr><th>Date</th><th>Amount</th><th>Remark</th></tr>${paid.filter(x=>x.name===name&&x.date>=from&&x.date<=to).map(x=>`<tr><td>${dmy(x.date)}</td><td>${money(x.amount)}</td><td>${esc(x.note||'')}</td></tr>`).join('')||'<tr><td colspan="3">कोई जमा नहीं</td></tr>'}</table></div>`}
+function saveBharavPayment(name,amount,date,note=''){db.bharavPayments??=[];db.bharavPayments.push({name,amount:Number(amount),date,note});save()}
+function editBharavRate(){let current=Number(db.settings.bharavRate??150),v=prompt('भराव का प्रति Tractor rate डालें:',current);if(v===null)return;let n=Number(v);if(!Number.isFinite(n)||n<0){alert('सही rate डालें');return}db.settings.bharavRate=n;save();toast('भराव rate update हो गया');bharav()}
+function royalty(){let rows=db.royalty.slice().reverse(),month=new Date().toISOString().slice(0,7),total=db.royalty.filter(x=>x.date.startsWith(month)).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0);document.getElementById("app").innerHTML=header("Daily Royalty","Original Parchi और Naka Parchi का difference",`<button class="btn" onclick="window.print()">🖨 Print / PDF</button>`)+
+`<div class="panel"><form id="royaltyForm"><div class="grid">${field("Date","date","date",today(),"","required")}${field("Original Parchi Total Weight","original","number","","","required min=\"0\" step=\"0.001\"")}${field("Naka Parchi Total Weight","naka","number","","","required min=\"0\" step=\"0.001\"")}</div><div class="actions"><button class="btn green">✓ Save Day</button></div></form></div><div class="panel"><h3>इस महीने का Total: ${num(total)} MT</h3><div class="tablewrap"><table><tr><th>Date</th><th>Original Weight</th><th>Naka Weight</th><th>Difference</th></tr>${rows.map(x=>`<tr><td>${dmy(x.date)}</td><td>${num(x.original)}</td><td>${num(x.naka)}</td><td><b>${num((+x.original||0)-(+x.naka||0))} MT</b></td></tr>`).join("")||'<tr><td colspan="4">No entry</td></tr>'}</table></div></div>`;
+document.getElementById("royaltyForm").onsubmit=e=>{e.preventDefault();if(!e.target.reportValidity())return;let x=Object.fromEntries(new FormData(e.target));db.royalty.push(x);save();toast("Royalty day save हो गया");royalty()}}
+function diesel(){let vehicles=[...new Set(db.dieselIn.filter(x=>x.sourceType==='Vehicle'&&x.vehicle).map(x=>x.vehicle))];document.getElementById('app').innerHTML=header('Diesel','सिर्फ Diesel आया की entry — Drum या Vehicle',`<button class="btn" onclick="window.print()">🖨 Report / Print</button>`)+
+`<div class="panel"><h3>⛽ Diesel आया</h3><form id="dinForm"><div class="grid">${field('Date','date','date',today(),'','required')}${select('Diesel कैसे आया?','sourceType',['Drum','Vehicle'])}${field('Drum कितने?','drums','number','','','min="1" step="1"')}${field('Litres','litres','number','','','required min="0.001" step="0.001"')}${field('Rate / Litre','rate','number','','','required min="0" step="0.01"')}${field('Amount','amount','number','','','readonly required') }<div class="field" id="dinVehicleWrap" style="display:none"><label>कौन सा Vehicle?</label><input name="vehicle" id="dinVehicle" list="dieselVehicles" placeholder="Vehicle number"><datalist id="dieselVehicles">${vehicles.map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div></div><div class="actions"><button class="btn green">✓ Save Diesel</button></div></form></div>`+
+`<div class="panel"><h3>इस महीने का Diesel Summary</h3><div class="tablewrap"><table><tr><th>Source</th><th>Vehicle / Drum</th><th>Total Litres</th><th>Total Amount</th></tr>${dieselMonthRows()}</table></div></div>`;
+const f=document.getElementById('dinForm'),type=f.elements.sourceType,vw=document.getElementById('dinVehicleWrap'),vi=document.getElementById('dinVehicle'),drums=f.elements.drums,lit=f.elements.litres,rate=f.elements.rate,amt=f.elements.amount;function syncDiesel(){let isV=type.value==='Vehicle';vw.style.display=isV?'block':'none';vi.required=isV;drums.required=!isV;if(!isV)vi.value='';if(isV)drums.value=''}function calc(){amt.value=Number(((+lit.value||0)*(+rate.value||0)).toFixed(2))||''}type.onchange=syncDiesel;lit.oninput=calc;rate.oninput=calc;syncDiesel();f.onsubmit=e=>{e.preventDefault();if(!e.target.reportValidity())return;let x=Object.fromEntries(new FormData(e.target));x.litres=+x.litres;x.drums=x.sourceType==='Drum'?+x.drums:0;x.rate=+x.rate;x.amount=Number((x.litres*x.rate).toFixed(2));if(x.sourceType==='Vehicle')x.vehicle=x.vehicle.trim();else x.vehicle='';db.dieselIn.push(x);save();toast('Diesel save हो गया');diesel()}}
+function dieselMonthRows(){let m=today().slice(0,7),rows=[];let drums=db.dieselIn.filter(x=>x.date.startsWith(m)&&x.sourceType==='Drum');let vehicles={};drums.length&&rows.push(`<tr><td>Drum</td><td>${drums.reduce((a,x)=>a+(+x.drums||0),0)} Drum</td><td>${num(drums.reduce((a,x)=>a+(+x.litres||0),0))} L</td><td>${money(drums.reduce((a,x)=>a+(+x.amount||0),0))}</td></tr>`);db.dieselIn.filter(x=>x.date.startsWith(m)&&x.sourceType==='Vehicle').forEach(x=>{vehicles[x.vehicle]??={l:0,a:0};vehicles[x.vehicle].l+=+x.litres||0;vehicles[x.vehicle].a+=+x.amount||0});Object.entries(vehicles).forEach(([v,r])=>rows.push(`<tr><td>Vehicle</td><td>${esc(v)}</td><td>${num(r.l)} L</td><td>${money(r.a)}</td></tr>`));return rows.join('')||'<tr><td colspan="4">इस महीने अभी Diesel entry नहीं है।</td></tr>'}
+function reports(d=today()){let sales=db.sales.filter(x=>x.date===d),by={};sales.forEach(x=>{by[x.material]??={w:0,t:0};by[x.material].w+=+x.weight||0;by[x.material].t+=+x.total||0});let cash=sales.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(+x.total||0),0),udhar=sales.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(+x.total||0),0),bt=db.bharav.filter(x=>x.date===d).reduce((a,x)=>a+(+x.tractors||0),0);document.getElementById('app').innerHTML=header('Daily Report','किसी भी तारीख की report और PDF',`<button class="btn primary" onclick="window.print()">📄 Final PDF / Print</button>`)+
+`<div class="panel no-print"><div class="grid"><div class="field"><label>Report Date (DD/MM/YYYY)</label><input type="date" id="reportDate" value="${d}"></div><div class="field" style="align-self:end"><button class="btn green" onclick="reports(document.getElementById('reportDate').value)">Report दिखाएँ</button></div></div></div><div class="panel"><div class="notice"><b>Report Date:</b> ${d}<br>PDF में Sale की हर entry के लिए <b>Customer Name, Weight, Material, Rate और Total</b> दिखेगा।</div><h3>Daily Sale Register</h3><div class="tablewrap"><table><tr><th>Customer Name</th><th>Weight</th><th>Material</th><th>Rate</th><th>Total</th></tr>${sales.map(x=>`<tr><td>${esc(x.customer)}</td><td>${num(x.weight)} MT</td><td>${esc(x.material)}</td><td>${money(x.rate)}</td><td>${money(x.total)}</td></tr>`).join('')||'<tr><td colspan="5">आज अभी कोई Sale entry नहीं है।</td></tr>'}<tr><th>कुल</th><th>${num(sales.reduce((a,x)=>a+(+x.weight||0),0))} MT</th><th></th><th></th><th>${money(sales.reduce((a,x)=>a+(+x.total||0),0))}</th></tr></table></div></div>
+<div class="panel"><h3>Material-wise Sale</h3><div class="tablewrap"><table><tr><th>Material</th><th>Total Weight</th><th>Total Sale</th></tr>${db.settings.materials.map(m=>`<tr><td>${m}</td><td>${num(by[m]?.w||0)} MT</td><td>${money(by[m]?.t||0)}</td></tr>`).join('')}<tr><th>Total</th><th>${num(sales.reduce((a,x)=>a+(+x.weight||0),0))} MT</th><th>${money(sales.reduce((a,x)=>a+(+x.total||0),0))}</th></tr></table></div></div>
+<div class="reportgrid"><div class="reportbox">Cash Sale<b>${money(cash)}</b></div><div class="reportbox">Udhar Sale<b>${money(udhar)}</b></div><div class="reportbox">भराव Tractor<b>${bt}</b></div><div class="reportbox">Royalty Difference<b>${num(db.royalty.filter(x=>x.date===d).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0))} MT</b></div></div>
+<div class="panel"><h3>Month Calendar Summary</h3><div class="tablewrap"><table><tr><th>Date</th><th>Sale</th><th>Weight</th><th>Cash</th><th>Udhar</th><th>भराव Tractor</th><th>Royalty Difference</th></tr>${monthRows()}</table></div></div>`}
+function monthRows(){let m=today().slice(0,7),days=[];for(let i=1;i<=31;i++){let dt=`${m}-${String(i).padStart(2,"0")}`;let chk=new Date(dt);if(chk.getMonth()+1!==Number(m.slice(5)))continue;let s=db.sales.filter(x=>x.date===dt),b=db.bharav.filter(x=>x.date===dt).reduce((a,x)=>a+x.tractors,0),r=db.royalty.filter(x=>x.date===dt).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0);if(s.length||b||r)days.push(`<tr><td>${dt}</td><td>${money(s.reduce((a,x)=>a+x.total,0))}</td><td>${num(s.reduce((a,x)=>a+x.weight,0))} MT</td><td>${money(s.filter(x=>x.payment==="Cash").reduce((a,x)=>a+x.total,0))}</td><td>${money(s.filter(x=>x.payment==="Udhar").reduce((a,x)=>a+x.total,0))}</td><td>${b}</td><td>${num(r)} MT</td></tr>`)}return days.join("")||'<tr><td colspan="7">इस महीने अभी कोई saved entry नहीं है।</td></tr>'}
+function settings(){let fields=[['date','Date'],['rst','RST No.'],['customer','Customer Name'],['place','Place'],['weight','Weight'],['rate','Rate'],['vehicle','Vehicle Number'],['naka','Naka Parchi'],['mobile','Mobile Number'],['remark','Remark']];let custom=db.settings.customFields||[];let c=db.settings.cloudSync?.config||BUILTIN_FIREBASE_CONFIG;let enabled=!!db.settings.cloudSync?.enabled;document.getElementById('app').innerHTML=header('Settings','Compulsory field, menu, custom field और Cloud Sync यहाँ manage करें')+`<div class="panel"><h3>☁️ Cloud Sync Setup</h3><div class="notice">एक ही Firebase Realtime Database connect करने पर laptop और mobile में data live synchronize होगा। Firebase पहले से Chamunda ERP के साथ configured है। नीचे config केवल reference/advanced change के लिए है। Live Sync अपने-आप चालू होता है।</div><div class="grid"><div class="field"><label>API Key</label><input id="fbApiKey" value="${esc(c.apiKey||'')}" placeholder="AIza..."></div><div class="field"><label>Auth Domain</label><input id="fbAuthDomain" value="${esc(c.authDomain||'')}" placeholder="project.firebaseapp.com"></div><div class="field"><label>Database URL</label><input id="fbDatabaseURL" value="${esc(c.databaseURL||'')}" placeholder="https://project-default-rtdb.firebaseio.com"></div><div class="field"><label>Project ID</label><input id="fbProjectId" value="${esc(c.projectId||'')}"></div><div class="field"><label>Storage Bucket</label><input id="fbStorageBucket" value="${esc(c.storageBucket||'')}"></div><div class="field"><label>Messaging Sender ID</label><input id="fbMessagingSenderId" value="${esc(c.messagingSenderId||'')}"></div><div class="field"><label>App ID</label><input id="fbAppId" value="${esc(c.appId||'')}"></div><div class="field"><label>Cloud Path</label><input id="fbPath" value="${esc(db.settings.cloudSync?.path||'chamundaERP/data')}"></div></div><div class="actions"><button class="btn" onclick="cloudTest()">🔌 Test Connection</button><button class="btn primary" onclick="cloudSaveConfig()">☁️ Save & Start Live Sync</button>${enabled?'<button class="btn danger" onclick="cloudDisconnect()">Disconnect</button>':''}</div><p class="muted" id="cloudStatus">${enabled?'● Cloud Sync configured':'○ Cloud Sync बंद है'}</p></div><div class="panel"><h3>Sale Entry में Compulsory Fields</h3><div class="grid">${fields.map(([k,l])=>`<label style="display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #ddd;border-radius:8px"><input type="checkbox" ${req(k)==='required'?'checked':''} onchange="db.settings.requiredFields['${k}']=this.checked;save();settings()"> ${l}</label>`).join('')}</div></div><div class="panel"><h3>नया Field जोड़ें</h3><div class="grid"><div class="field"><label>Field का नाम</label><input id="newFieldLabel" placeholder="जैसे Driver Name"></div><div class="field"><label>Type</label><select id="newFieldType"><option value="text">Text</option><option value="number">Number</option></select></div><div class="field" style="align-self:end"><button class="btn green" onclick="addCustomField()">+ Field जोड़ें</button></div></div><div class="tablewrap"><table><tr><th>Field</th><th>Type</th><th>Compulsory</th><th>Delete</th></tr>${custom.map(f=>`<tr><td>${esc(f.label)}</td><td>${esc(f.type||'text')}</td><td><input type="checkbox" ${f.required!==false?'checked':''} onchange="setCustomRequired('${f.key}',this.checked)"></td><td><button class="btn danger" onclick="deleteCustomField('${f.key}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="4">अभी कोई custom field नहीं है।</td></tr>'}</table></div></div><div class="panel"><h3>Menu दिखाएँ / छुपाएँ</h3><div class="grid">${pages.filter(p=>!['dashboard','settings'].includes(p[0])).map(p=>`<label style="display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #ddd;border-radius:8px"><input type="checkbox" ${!(db.settings.hiddenMenus||[]).includes(p[0])?'checked':''} onchange="toggleMenu('${p[0]}',this.checked)"> ${p[1]} ${p[2]}</label>`).join('')}</div></div><div class="panel"><h3>भराव Rate</h3><button class="btn" onclick="editBharavRate()">Rate Edit करें (अभी ${money(db.settings.bharavRate??150)})</button></div>`;if(enabled)initCloud()}
+function addCustomField(){let label=document.getElementById('newFieldLabel').value.trim(),type=document.getElementById('newFieldType').value;if(!label)return alert('Field का नाम डालें');let key='custom_'+Date.now();db.settings.customFields??=[];db.settings.customFields.push({key,label,type,required:true});save();toast('नया field जुड़ गया');settings()}
+function setCustomRequired(key,v){let f=(db.settings.customFields||[]).find(x=>x.key===key);if(f){f.required=v;save()}}
+function deleteCustomField(key){if(!confirm('यह custom field delete करना है?'))return;db.settings.customFields=(db.settings.customFields||[]).filter(x=>x.key!==key);db.sales.forEach(x=>delete x[key]);save();toast('Field delete हो गया');settings()}
+function toggleMenu(id,show){db.settings.hiddenMenus??=[];db.settings.hiddenMenus=show?db.settings.hiddenMenus.filter(x=>x!==id):[...new Set([...db.settings.hiddenMenus,id])];save();nav()}
+function backup(){document.getElementById("app").innerHTML=header("Backup & Restore","आपके data की सुरक्षा के लिए",`<button class="btn" onclick="go('dashboard')">← Dashboard</button>`)+
+`<div class="panel"><h3>💾 Backup निकालें</h3><p class="muted">Backup file को सुरक्षित जगह रखें। Mobile/PC बदलने पर Restore कर सकते हैं।</p><button class="btn primary" onclick="downloadBackup()">Download Backup</button></div>
+<div class="panel"><h3>📥 Bulk Excel / CSV Import</h3>
+<p class="muted">एक महीने की Sale/Dispatch entries एक साथ import करें। <b>.xlsx, .xls या .csv</b> file चलेगी। पहले Preview होगा; उसके बाद ही data save होगा।</p>
+<div class="notice"><b>Excel columns:</b> Date, Customer, Material, Place, Weight, Rate, Vehicle, Naka Parchi, Mobile, Payment, Remark, RST No.<br><b>Weight:</b> 9 = 9 MT, 9000 = 9 MT, 9.000 = 9 MT, 12.530 = 12.530 MT. Total अपने-आप Weight × Rate होगा।</div>
+<div class="actions" style="justify-content:flex-start"><button class="btn" onclick="downloadImportTemplate()">⬇ Download Excel Template</button><input id="bulkImportFile" type="file" accept=".xlsx,.xls,.csv" onchange="previewBulkImport(event)"></div>
+<div id="bulkImportPreview" style="margin-top:12px"></div>
+</div>
+<div class="panel"><h3>↩ Restore</h3><input type="file" id="restore" accept=".json"><p class="muted">सिर्फ Chamunda ERP की backup JSON file चुनें।</p></div>
+<div class="panel"><h3>⚠️ Data Reset</h3><button class="btn danger" onclick="resetData()">सारा local data delete करें</button></div>`;
+document.getElementById("restore").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.sales||!x.settings)throw Error();db=x;save();toast("Backup restore हो गया");go("dashboard")}catch(err){alert("यह valid Chamunda ERP backup नहीं है।")}};r.readAsText(f)}
+}
+
+let bulkImportRows=[];
+function bulkHeaderKey(v){return String(v??'').trim().toLowerCase().replace(/[._\-\/\s]+/g,'').replace(/[()]/g,'')}
+function bulkValue(row,names){for(const n of names){const k=bulkHeaderKey(n);if(Object.prototype.hasOwnProperty.call(row,k))return row[k];}return ''}
+function parseImportDate(v){
+  if(v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
+  const s=String(v??'').trim(); if(!s)return '';
+  if(/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)){const [y,m,d]=s.split('-');return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`}
+  let m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if(m){let d=+m[1],mo=+m[2],y=+m[3];if(y<100)y+=2000;return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`}
+  const dt=new Date(s); if(!isNaN(dt))return dt.toISOString().slice(0,10);
+  return '';
+}
+function parseImportWeight(v){return normalizeWeight(String(v??''))}
+function bulkFingerprint(x){return [x.date,x.rst,x.customer,x.material,x.place,x.weight,x.rate,x.vehicle,x.naka,x.mobile,x.payment,x.remark].map(v=>String(v??'').trim().toLowerCase()).join('|')}
+function previewBulkImport(e){
+  const f=e.target.files?.[0]; if(!f)return;
+  if(typeof XLSX==='undefined'){alert('Excel reader load नहीं हुआ। Internet connection check करें।');return}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]]; const raw=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
+      if(!raw.length)throw Error('Excel/CSV में कोई data row नहीं मिली।');
+      bulkImportRows=raw.map((r,idx)=>{
+        const row={};Object.keys(r).forEach(k=>row[bulkHeaderKey(k)]=r[k]);
+        const date=parseImportDate(bulkValue(row,['Date','दिनांक','तारीख']));
+        const customer=String(bulkValue(row,['Customer','Customer Name','ग्राहक','ग्राहक नाम'])).trim();
+        const material=String(bulkValue(row,['Material','सामग्री'])).trim();
+        const place=String(bulkValue(row,['Place','स्थान'])).trim();
+        const weight=parseImportWeight(bulkValue(row,['Weight','Weight (MT)','Qty','Quantity','वजन']));
+        const rate=Number(bulkValue(row,['Rate','रेट']))||0;
+        const vehicle=String(bulkValue(row,['Vehicle','Vehicle No','Vehicle Number','गाड़ी','गाड़ी नंबर'])).trim();
+        const naka=String(bulkValue(row,['Naka Parchi','Naka','नाका पर्ची'])).trim();
+        const mobile=String(bulkValue(row,['Mobile','Mobile Number','मोबाइल'])).replace(/\D/g,'');
+        const payment=String(bulkValue(row,['Payment','Payment Mode','भुगतान'])).trim()||'Cash';
+        const remark=String(bulkValue(row,['Remark','Remarks','टिप्पणी'])).trim();
+        const rst=String(bulkValue(row,['RST No','RST','RST Number','आरएसटी'])).trim();
+        const errors=[]; if(!date)errors.push('Date'); if(!customer)errors.push('Customer'); if(!material)errors.push('Material'); if(weight===null)errors.push('Weight'); if(!rate||rate<0)errors.push('Rate'); if(mobile && !/^\d{10}$/.test(mobile))errors.push('Mobile');
+        return {rowNo:idx+2,date,customer,material,place,weight,rate,vehicle,naka,mobile,payment:/^udhar$/i.test(payment)?'Udhar':'Cash',remark,rst,total:weight===null?0:Number((weight*rate).toFixed(2)),errors};
+      });
+      const valid=bulkImportRows.filter(x=>!x.errors.length), invalid=bulkImportRows.length-valid.length;
+      document.getElementById('bulkImportPreview').innerHTML=`<div class="notice"><b>${bulkImportRows.length}</b> rows मिलीं • <b>${valid.length}</b> ready • <b>${invalid}</b> में error</div>`+
+      `<div class="tablewrap"><table><tr><th>Row</th><th>Date</th><th>Customer</th><th>Material</th><th>Weight</th><th>Rate</th><th>Total</th><th>Status</th></tr>${bulkImportRows.slice(0,50).map(x=>`<tr><td>${x.rowNo}</td><td>${dmy(x.date)||'-'}</td><td>${esc(x.customer)}</td><td>${esc(x.material)}</td><td>${x.weight===null?'-':num(x.weight)}</td><td>${money(x.rate)}</td><td>${money(x.total)}</td><td>${x.errors.length?'<span style="color:#b42318">Error: '+esc(x.errors.join(', '))+'</span>':'<span style="color:#15803d">✓ Ready</span>'}</td></tr>`).join('')}</table></div>`+
+      (bulkImportRows.length>50?`<p class="muted">पहली 50 rows preview में दिख रही हैं; बाकी भी import होंगी।</p>`:'')+
+      `<div class="actions"><button class="btn" onclick="cancelBulkImport()">Cancel</button><button class="btn green" ${invalid?'disabled':''} onclick="commitBulkImport()">✓ Import ${valid.length} Entries</button></div>`;
+    }catch(err){bulkImportRows=[];document.getElementById('bulkImportPreview').innerHTML='<div class="notice" style="background:#fff1f0;color:#9b1c1c">'+esc(err.message||'File पढ़ने में error')+'</div>'}
+  };reader.readAsArrayBuffer(f);
+}
+function commitBulkImport(){
+  const rows=bulkImportRows.filter(x=>!x.errors.length); if(!rows.length)return alert('Import करने के लिए valid rows नहीं हैं।');
+  const existing=new Set(db.sales.map(bulkFingerprint)); let added=0,skipped=0;
+  rows.forEach(x=>{const sale={date:x.date,serial:nextSerial(),rst:x.rst,customer:x.customer,material:x.material,place:x.place,weight:x.weight,rate:x.rate,total:x.total,vehicle:x.vehicle,naka:x.naka,mobile:x.mobile,payment:x.payment,remark:x.remark,_id:`sale_${Date.now()}_${Math.random().toString(36).slice(2,9)}`};const fp=bulkFingerprint(sale);if(existing.has(fp)){skipped++;return}existing.add(fp);db.sales.push(sale);if(x.customer&&!db.customers.some(c=>c.name.toLowerCase()===x.customer.toLowerCase()))db.customers.push({name:x.customer,mobile:x.mobile||'',created:x.date});added++});
+  save(); toast(`${added} entries import हो गईं${skipped?` • ${skipped} duplicate skip`:''}`); bulkImportRows=[];const el=document.getElementById('bulkImportPreview');if(el)el.innerHTML=`<div class="notice" style="background:#eaf8ef;color:#126b34"><b>Import complete:</b> ${added} नई entries saved${skipped?`, ${skipped} duplicate rows skip हुईं`:''}.</div>`;
+}
+function cancelBulkImport(){bulkImportRows=[];const el=document.getElementById('bulkImportPreview');if(el)el.innerHTML='';const f=document.getElementById('bulkImportFile');if(f)f.value=''}
+function downloadImportTemplate(){
+  const rows=[{Date:today(),Customer:'ABC',Material:'12 MM',Place:'Jaipur',Weight:9,Rate:1200,Vehicle:'RJ14XX1234','Naka Parchi':'12345',Mobile:'9876543210',Payment:'Udhar',Remark:'', 'RST No':'RST001'}];
+  if(typeof XLSX!=='undefined'){const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Sale Import');XLSX.writeFile(wb,'Chamunda-ERP-Sale-Import-Template.xlsx');}
+  else {const csv='Date,Customer,Material,Place,Weight,Rate,Vehicle,Naka Parchi,Mobile,Payment,Remark,RST No\n'+Object.values(rows[0]).map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='Chamunda-ERP-Sale-Import-Template.csv';a.click();}
+}
+function downloadBackup(){let a=document.createElement("a"),blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});a.href=URL.createObjectURL(blob);a.download=`Chamunda-ERP-Backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href)}
+function resetData(){if(confirm("सारा local data delete करना है? पहले backup ले लें।")){db=blank();save();go("dashboard");toast("Data reset हो गया")}}
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").then(r=>r.update()).catch(()=>{}));
+if(db.settings?.cloudSync?.enabled) setTimeout(()=>initCloud(),200);
+render();
+</script>
+</body></html>
