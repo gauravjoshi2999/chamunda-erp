@@ -373,7 +373,7 @@ function goOffice(p){
   sessionStorage.setItem("chamunda_office_page",officePage);
   render();
 }
-async function sendOfficeDayWhatsApp(date){
+async async function sendOfficeDayWhatsApp(date){
   try{
     const rows=(db.officeEntries||[]).filter(x=>x.date===date).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
     if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return}
@@ -421,7 +421,12 @@ async function sendOfficeDayWhatsApp(date){
     doc.setFontSize(13);doc.text("भराव Summary",14,y);y+=7;doc.setFontSize(10);
     doc.text("कुल भराव Entries: "+bharavRows.length,14,y);y+=6;
     doc.text("कुल Tractor / Trip: "+num(bharavTrips),14,y);y+=6;
-    doc.text("कुल भराव Amount: ₹"+Number(bharavAmount||0).toLocaleString("en-IN",{maximumFractionDigits:2}),14,y);
+    doc.text("कुल भराव Amount: ₹"+Number(bharavAmount||0).toLocaleString("en-IN",{maximumFractionDigits:2}),14,y);y+=10;
+    doc.setFontSize(13);doc.text("Naka / Royalty Detail",14,y);y+=7;doc.setFontSize(10);
+    doc.text("Naka वाली Entries: "+nakaRows.length,14,y);y+=6;
+    doc.text("Naka Total: "+num(nakaSum)+" × 51 = ₹"+Number(nakaRoyalty||0).toLocaleString("en-IN"),14,y);y+=6;
+    doc.text("Matched Weight: "+num(weightSum)+" MT → Round "+Math.round(weightSum)+" × 51 = ₹"+Number(royaltyWeight||0).toLocaleString("en-IN"),14,y);y+=6;
+    doc.text("Royalty Difference: ₹"+Number(difference||0).toLocaleString("en-IN"),14,y);
     if(bharavRows.length){
       y+=9;doc.setFontSize(8);doc.text("Date-wise भराव:",14,y);y+=5;
       bharavRows.slice(0,10).forEach(r=>{doc.text((r.name||"Cash")+" | "+(r.tractors||0)+" Trip | ₹"+Number(r.amount||0).toLocaleString("en-IN",{maximumFractionDigits:2})+" | "+(r.payment||""),14,y);y+=5})
