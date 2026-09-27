@@ -179,6 +179,7 @@ function render(){nav();({dashboard:dash,sale,sale:bla,bharav,royalty,diesel,rep
 // explicit dispatcher avoids shorthand ambiguity
 function render(){nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
+function normalizeWeight(raw){const s=String(raw??'').trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
 function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
 function totals(){let sales=db.sales;return{entries:sales.length,weight:sales.reduce((a,x)=>a+Number(x.weight||0),0),amount:sales.reduce((a,x)=>a+Number(x.total||0),0),cash:sales.filter(x=>x.payment==="Cash").reduce((a,x)=>a+Number(x.total||0),0),udhar:sales.filter(x=>x.payment==="Udhar").reduce((a,x)=>a+Number(x.total||0),0)}}
 function dash(){let t=totals(), b=db.bharav.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.tractors||0),0),ri=db.dieselIn.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.litres||0),0);document.getElementById("app").innerHTML=header("Office Dashboard","आज की entry के लिए आसान screen",`<button class="btn primary" onclick="go('sale')">+ नई Sale Entry</button>`)
@@ -204,7 +205,7 @@ ${field("Remark","remark","text","","span2",req("remark"))}
 ${cf.map(f=>field(f.label,f.key,f.type||"text","",f.span2?"span2":f.key,f.required!==false?"required":"")).join("")}
 </div><div class="actions"><button type="reset" class="btn">Clear</button><button type="submit" class="btn green">✓ Save Entry</button><button type="button" class="btn primary" onclick="saveSaleAndAddSameCustomer()">✓ Save & Add Same Customer</button></div></form></div>`
 +`<div class="panel"><div class="top"><h3 style="margin:0">Sale Register</h3><input class="search" id="saleSearch" placeholder="Customer / RST / Vehicle खोजें"></div><div id="saleTable">${saleTable(rows)}</div></div>`;
-const form=document.getElementById("saleForm"),w=form.elements.weight,r=form.elements.rate,tp=form.elements.totalPreview;function normalizeWeight(raw){const s=String(raw||'').trim();const n=Number(s);if(!s||!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
+const form=document.getElementById("saleForm"),w=form.elements.weight,r=form.elements.rate,tp=form.elements.totalPreview;
 function calcSale(){let mt=normalizeWeight(w.value);tp.value=(mt!==null&&Number.isFinite(+r.value))?'₹'+Number((mt*r.value).toFixed(2)).toLocaleString('en-IN',{minimumFractionDigits:2}):''}w.oninput=calcSale;r.oninput=calcSale;calcSale();
 form.onsubmit=e=>{e.preventDefault();saveSaleFromForm(false)};
 document.getElementById("saleSearch").oninput=e=>document.getElementById("saleTable").innerHTML=saleTable(rows.filter(x=>(x.customer+" "+x.rst+" "+x.vehicle).toLowerCase().includes(e.target.value.toLowerCase())))}
