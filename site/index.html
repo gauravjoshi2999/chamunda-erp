@@ -500,21 +500,20 @@ function officeBharav(d=today()){
   db.settings??={};
   db.settings.bharavSubmittedDates??=[];
   const selectedDate=String(d||today()).slice(0,10);
-  const isSubmitted=db.settings.bharavSubmittedDates.includes(selectedDate);
   const rows=db.bharav.filter(x=>String(x.date||'').slice(0,10)===selectedDate).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));
+  const pendingRows=rows.filter(x=>x.status!=='submitted');
+  const allSubmitted=rows.length>0&&pendingRows.length===0;
   const rate=Number(db.settings.bharavRate??150);
   const trips=rows.reduce((a,x)=>a+(Number(x.tractors)||0),0);
   const amount=rows.reduce((a,x)=>a+(Number(x.amount)||0),0);
   const cash=rows.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(Number(x.amount)||0),0);
   const udhar=rows.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(Number(x.amount)||0),0);
   const names=[...new Set(db.bharav.filter(x=>x.payment==='Udhar'&&x.name).map(x=>x.name))].sort();
-  const tableRows=rows.map(x=>'<tr><td>'+esc(x.time||'')+'</td><td>'+num(x.tractors)+'</td><td>'+money(x.rate)+'</td><td>'+money(x.amount)+'</td><td>'+esc(x.payment)+'</td><td>'+esc(x.name||'-')+'</td><td>'+esc(x.remark||'')+'</td><td>'+(isSubmitted?'<span class="muted">🔒 Submitted</span>':'<button class="btn primary" data-id="'+esc(x._id)+'" onclick="editOfficeBharav(this.dataset.id)">Edit</button> <button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeBharav(this.dataset.id)">Delete</button>')+'</td></tr>').join('');
+  const tableRows=rows.map(x=>'<tr><td>'+esc(x.time||'')+'</td><td>'+num(x.tractors)+'</td><td>'+money(x.rate)+'</td><td>'+money(x.amount)+'</td><td>'+esc(x.payment)+'</td><td>'+esc(x.name||'-')+'</td><td>'+esc(x.remark||'')+'</td><td>'+(x.status==='submitted'?'<span class="muted">🔒 Submitted</span>':'<button class="btn primary" data-id="'+esc(x._id)+'" onclick="editOfficeBharav(this.dataset.id)">Edit</button> <button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeBharav(this.dataset.id)">Delete</button>')+'</td></tr>').join('');
   document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+
     header('🚜 भराव Entry','Dumper / Trip की संख्या, Rate और Cash / Udhar','')+
-    '<div class="notice"><b>भराव Rate:</b> ₹'+money(rate).replace('₹','')+' प्रति Trip.<br>'+
-    (isSubmitted?'<b>🔒 '+dmy(selectedDate)+' की भराव entries Submit हो चुकी हैं। अब Office से Edit/Delete या नई entry नहीं की जा सकती।</b>':'<b>Save के बाद entry Edit/Delete कर सकते हैं। दिन की entries पूरी होने पर Submit करें।')+
-    '</div>'+
-    (isSubmitted?'':'<div class="panel"><h3>नई भराव Entry</h3><form id="officeBharavForm"><div class="grid">'+
+    '<div class="notice"><b>भराव Rate:</b> ₹'+money(rate).replace('₹','')+' प्रति Trip.<br><b>Workflow:</b> Submit के बाद भी नई भराव Entry जोड़ सकते हैं। नई entries pending रहेंगी और अगली बार फिर Submit कर सकते हैं।</div>'+
+    '<div class="panel"><h3>नई भराव Entry</h3><form id="officeBharavForm"><div class="grid">'+
     field('Date','date','date',selectedDate,'','required')+
     field('Dumper / Trip कितने?','tractors','number','','','required min="1" step="1"')+
     field('Rate / Trip','rate','number',rate,'','required min="0" step="0.01"')+
@@ -522,16 +521,15 @@ function officeBharav(d=today()){
     select('Payment','payment',['Cash','Udhar'])+
     '<div class="field" id="officeBharavNameWrap" style="display:none"><label>Udhar किसके नाम?</label><input name="name" id="officeBharavName" list="officeBharavNames" placeholder="नाम चुनें या नया लिखें"><datalist id="officeBharavNames">'+names.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></div>'+
     field('Remark','remark','text','','','')+
-    '</div><div class="actions"><button class="btn green" type="submit">✓ Save भराव</button><button class="btn" type="button" onclick="officeBharav()">Clear</button></div></form></div>')+
+    '</div><div class="actions"><button class="btn green" type="submit">✓ Save भराव</button><button class="btn" type="button" onclick="officeBharav()">Clear</button></div></form></div>'+
     '<div class="panel"><div class="reportgrid"><div class="reportbox">कुल Trip<b>'+trips+'</b></div><div class="reportbox">कुल Amount<b>'+money(amount)+'</b></div><div class="reportbox">Cash<b>'+money(cash)+'</b></div><div class="reportbox">Udhar<b>'+money(udhar)+'</b></div></div></div>'+
-    '<div class="panel no-print" style="margin-top:0"><div class="grid"><div class="field"><label>भराव की तारीख देखें</label><input type="date" id="officeBharavViewDate" value="'+selectedDate+'"></div><div class="field" style="align-self:end"><button class="btn primary" type="button" style="width:100%;font-weight:850;box-shadow:0 3px 0 #0f4f9f;cursor:pointer" onclick="officeBharav(document.getElementById(\'officeBharavViewDate\').value)">🔎 उस दिन की Entry देखें</button></div></div></div>'+
-    '<div class="panel"><div class="top"><div><h3 style="margin:0">'+dmy(selectedDate)+' का भराव</h3><div class="muted">'+(isSubmitted?'🔒 पूरा दिन Submit हो चुका है':'Pending entries — Submit करने तक Edit/Delete उपलब्ध है')+'</div></div></div><div class="tablewrap"><table><tr><th>Time</th><th>Dumper / Trip</th><th>Rate</th><th>Total</th><th>Payment</th><th>Udhar Name</th><th>Remark</th><th>Action</th></tr>'+
+    '<div class="panel no-print" style="margin-top:0"><div class="grid"><div class="field"><label>भराव की तारीख देखें</label><input type="date" id="officeBharavViewDate" value="'+selectedDate+'"></div><div class="field" style="align-self:end"><button class="btn primary" type="button" style="width:100%;font-weight:850;box-shadow:0 3px 0 #0f4f9f;cursor:pointer" onclick="officeBharav(document.getElementById(\'officeBharavViewDate\').value)">🔎 उस दिन की Entry देखें</button></div><div class="field" style="align-self:end"><button class="btn" type="button" style="width:100%;font-weight:850;cursor:pointer" onclick="officeBharavMonth(document.getElementById(\'officeBharavViewDate\').value.slice(0,7))">📅 Monthly View</button></div></div></div>'+
+    '<div class="panel"><div class="top"><div><h3 style="margin:0">'+dmy(selectedDate)+' का भराव</h3><div class="muted">'+(allSubmitted?'🔒 सभी entries Submit हो चुकी हैं':'Pending entries — Submit करने तक Edit/Delete उपलब्ध है')+'</div></div></div><div class="tablewrap"><table><tr><th>Time</th><th>Dumper / Trip</th><th>Rate</th><th>Total</th><th>Payment</th><th>Udhar Name</th><th>Remark</th><th>Action</th></tr>'+
     (tableRows||'<tr><td colspan="8">इस तारीख की कोई भराव entry नहीं है।</td></tr>')+
     '</table></div><div class="actions" style="margin-top:12px;justify-content:flex-end">'+
-    (isSubmitted?'<button class="btn" type="button" disabled>🔒 Day Submitted</button>':rows.length?'<button class="btn green" type="button" onclick="submitOfficeBharav(\''+selectedDate+'\')">✓ Submit पूरे दिन की भराव</button>':'<button class="btn" type="button" disabled>Submit के लिए कोई entry नहीं</button>')+
+    (pendingRows.length?'<button class="btn green" type="button" onclick="submitOfficeBharav(\''+selectedDate+'\')">✓ Submit Pending Entries</button>':'<button class="btn" type="button" disabled>✓ सब Submit हो गया</button>')+
     '</div></div>';
   officeNav();
-  if(isSubmitted)return;
   const form=document.getElementById('officeBharavForm'), payment=form.elements.payment, wrap=document.getElementById('officeBharavNameWrap'), nameInput=document.getElementById('officeBharavName'), tripsInput=form.elements.tractors, rateInput=form.elements.rate, amountInput=form.elements.amount;
   function calc(){const t=Number(tripsInput.value)||0,r=Number(rateInput.value);amountInput.value=(t>0&&Number.isFinite(r))?Number((t*r).toFixed(2)):''}
   function sync(){const u=payment.value==='Udhar';wrap.style.display=u?'block':'none';nameInput.required=u;if(!u)nameInput.value=''}
@@ -540,12 +538,52 @@ function officeBharav(d=today()){
     e.preventDefault();
     if(!form.reportValidity())return;
     const x=Object.fromEntries(new FormData(form));
-    if(db.settings.bharavSubmittedDates.includes(String(x.date||'').slice(0,10))){alert('इस तारीख की भराव entries Submit हो चुकी हैं। अब नई entry नहीं जोड़ सकते।');return;}
     x.tractors=Number(x.tractors);x.rate=Number(x.rate);x.amount=Number((x.tractors*x.rate).toFixed(2));
     x.name=x.payment==='Udhar'?(x.name||'').trim():'';
-    x.time=currentTime();x.source='Office';x._id='bharav_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    x.time=currentTime();x.source='Office';x.status='pending';x._id='bharav_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
     db.bharav.push(x);save();toast('भराव save हो गया — Main Login में भी दिखाई देगा');officeBharav(x.date);
   };
+}
+function editOfficeBharav(id){
+  const x=(db.bharav||[]).find(r=>String(r._id)===String(id)); if(!x)return;
+  const d=String(x.date||today()).slice(0,10); if(x.status==='submitted'){alert('यह भराव entry Submit हो चुकी है। अब Edit नहीं कर सकते।');return;}
+  const tractors=prompt('कितने Dumper / Trip?',x.tractors??''); if(tractors===null)return;
+  const t=Number(tractors); if(!Number.isInteger(t)||t<1)return alert('सही Trip संख्या डालें');
+  const rate=prompt('Rate / Trip डालें:',x.rate??db.settings.bharavRate??150); if(rate===null)return;
+  const r=Number(rate); if(!Number.isFinite(r)||r<0)return alert('सही Rate डालें');
+  const payment=prompt('Payment: Cash या Udhar',x.payment||'Cash'); if(payment===null)return;
+  const p=/^udhar$/i.test(payment.trim())?'Udhar':'Cash';
+  let name=x.name||''; if(p==='Udhar'){name=prompt('Udhar किसके नाम?',name)||'';name=name.trim();if(!name)return alert('Udhar नाम डालें')}else name='';
+  const remark=prompt('Remark:',x.remark||''); if(remark===null)return;
+  x.tractors=t;x.rate=r;x.amount=Number((t*r).toFixed(2));x.payment=p;x.name=name;x.remark=remark;
+  save();toast('भराव entry update हो गई');officeBharav(d);
+}
+function deleteOfficeBharav(id){
+  const x=(db.bharav||[]).find(r=>String(r._id)===String(id)); if(!x)return;
+  const d=String(x.date||today()).slice(0,10); if(x.status==='submitted'){alert('यह भराव entry Submit हो चुकी है। अब Delete नहीं कर सकते।');return;}
+  if(!confirm(dmy(d)+' की यह भराव entry Delete करनी है?'))return;
+  db.bharav=db.bharav.filter(r=>String(r._id)!==String(id));save();toast('भराव entry delete हो गई');officeBharav(d);
+}
+function submitOfficeBharav(date){
+  const d=String(date||today()).slice(0,10);db.bharav??=[];db.settings??={};db.settings.bharavSubmittedDates??=[];
+  const rows=db.bharav.filter(x=>String(x.date||'').slice(0,10)===d);
+  const pending=rows.filter(x=>x.status!=='submitted');
+  if(!pending.length){alert('इस तारीख की कोई pending भराव entry नहीं है।');return;}
+  if(!confirm(dmy(d)+' की '+pending.length+' pending भराव entries Submit करनी हैं?'))return;
+  pending.forEach(x=>{x.status='submitted';x.submittedAt=new Date().toISOString()});
+  save();toast(dmy(d)+' की pending भराव Submit हो गई 🔒');officeBharav(d);
+}
+function officeBharavMonth(month=today().slice(0,7)){
+  const m=String(month||today().slice(0,7)).slice(0,7);
+  const rows=db.bharav.filter(x=>String(x.date||'').slice(0,7)===m);
+  const trips=rows.reduce((a,x)=>a+(Number(x.tractors)||0),0),amount=rows.reduce((a,x)=>a+(Number(x.amount)||0),0),cash=rows.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(Number(x.amount)||0),0),udhar=rows.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const days=[...new Set(rows.map(x=>String(x.date||'').slice(0,10)))].sort();
+  const dayRows=days.map(d=>{const r=rows.filter(x=>String(x.date||'').slice(0,10)===d),t=r.reduce((a,x)=>a+(Number(x.tractors)||0),0),amt=r.reduce((a,x)=>a+(Number(x.amount)||0),0),ca=r.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(Number(x.amount)||0),0),ud=r.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(Number(x.amount)||0),0),pending=r.filter(x=>x.status!=='submitted').length;return '<tr><td>'+dmy(d)+'</td><td>'+t+'</td><td>'+money(amt)+'</td><td>'+money(ca)+'</td><td>'+money(ud)+'</td><td>'+(pending?'<span style="color:#b45309">'+pending+' Pending</span>':'🔒 Submitted')+'</td><td><button class="btn primary" data-date="'+d+'" onclick="officeBharav(this.dataset.date)">देखें</button></td></tr>'}).join('');
+  document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+header('📅 भराव Monthly View','पूरे महीने का भराव summary और day-wise entries','')+
+  '<div class="panel no-print"><div class="grid"><div class="field"><label>महीना चुनें</label><input type="month" id="officeBharavMonth" value="'+m+'"></div><div class="field" style="align-self:end"><button class="btn primary" type="button" style="width:100%;font-weight:850" onclick="officeBharavMonth(document.getElementById(\'officeBharavMonth\').value)">🔎 Monthly देखें</button></div><div class="field" style="align-self:end"><button class="btn" type="button" style="width:100%" onclick="officeBharav()">← आज की भराव</button></div></div></div>'+
+  '<div class="panel"><div class="reportgrid"><div class="reportbox">कुल Trip<b>'+trips+'</b></div><div class="reportbox">कुल Amount<b>'+money(amount)+'</b></div><div class="reportbox">Cash<b>'+money(cash)+'</b></div><div class="reportbox">Udhar<b>'+money(udhar)+'</b></div></div></div>'+
+  '<div class="panel"><h3>'+m+' का Day-wise भराव</h3><div class="tablewrap"><table><tr><th>Date</th><th>Trip</th><th>Total</th><th>Cash</th><th>Udhar</th><th>Status</th><th>Action</th></tr>'+(dayRows||'<tr><td colspan="7">इस महीने अभी कोई भराव entry नहीं है।</td></tr>')+'</table></div></div>';
+  officeNav();
 }
 function editOfficeBharav(id){
   const x=(db.bharav||[]).find(r=>String(r._id)===String(id)); if(!x)return;
