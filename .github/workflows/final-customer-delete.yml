@@ -1,0 +1,37 @@
+name: Final customer controls
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch customer delete
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('site/index.html')
+          s=p.read_text()
+          if 'FINAL_CUSTOMER_DELETE_V17' in s:
+              raise SystemExit(0)
+          s=s.replace('const ERP_VERSION="V16";','const ERP_VERSION="V17";\nconst FINAL_CUSTOMER_DELETE_V17=true;')
+          anchor="function saveCustomerForm(oldName){"
+          fn="function removeCustomer(name){let c=customerByName(name);if(!c||!name)return;let sales=db.sales.filter(x=>String(x.customer||'').trim().toLowerCase()===String(name).trim().toLowerCase()).length,payments=db.customerPayments.filter(x=>x.customer===name).length,adjustments=db.customerAdjustments.filter(x=>x.customer===name).length;let msg='Customer '+name+' और उसका पूरा खाता delete होगा।';if(sales+payments+adjustments)msg+='\\n\\nLinked records: '+sales+' Sale, '+payments+' Payment, '+adjustments+' Manual transaction.';msg+='\\n\\nयह action वापस नहीं किया जा सकता। पहले Backup लेना चाहते हैं तो Cancel दबाएँ।';if(!confirm(msg))return;db.sales=db.sales.filter(x=>String(x.customer||'').trim().toLowerCase()!==String(name).trim().toLowerCase());db.customerPayments=db.customerPayments.filter(x=>x.customer!==name);db.customerAdjustments=db.customerAdjustments.filter(x=>x.customer!==name);db.customers=db.customers.filter(x=>String(x.name||'').trim().toLowerCase()!==String(name).trim().toLowerCase());save();toast('Customer और उसका खाता delete हो गया');customers()}\\n"
+          if anchor not in s: raise SystemExit('customer anchor missing')
+          s=s.replace(anchor,fn+anchor,1)
+          old='<button class="btn" onclick=\'openCustomerForm(${JSON.stringify(name)})\'>Edit</button></td></tr>'
+          new='<button class="btn" onclick=\'openCustomerForm(${JSON.stringify(name)})\'>Edit</button> <button class="btn danger" onclick=\'removeCustomer(${JSON.stringify(name)})\'>Delete</button></td></tr>'
+          if old not in s: raise SystemExit('customer action anchor missing')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add site/index.html
+          git diff --cached --quiet || (git commit -m "Add safe customer delete" && git push)
