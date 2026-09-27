@@ -71,7 +71,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 <div class="toast" id="toast"></div>
 <script>
 const KEY="chamunda_erp_v1";
-const ERP_VERSION="V24";
+const ERP_VERSION="V25";
 const FINAL_CUSTOMER_DELETE_V17=true;
 // Chamunda ERP Firebase Live Sync (Firebase Web App config)
 const BUILTIN_FIREBASE_CONFIG={
@@ -223,7 +223,7 @@ function officeNav(){
     btn.onclick=()=>{officePage=key;sessionStorage.setItem('chamunda_office_page',key);fn();};
     n.appendChild(btn);
   };
-  add('📝 Office Entry','entry',officeEntry);
+  add('📝 Entry','entry',officeEntry);
   add('🚜 भराव','bharav',()=>officeBharav());
   add('⛽ Diesel','diesel',officeDiesel);
   add('🚪 Logout','logout',erpLogout);
