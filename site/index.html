@@ -68,10 +68,6 @@ input,select,textarea{max-width:100%}
   .cards{grid-template-columns:1fr!important}
 }
 </style>
-<script defer src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"></script>
-<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -172,7 +168,7 @@ function showAdminLogin(){
 }
 function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='block';if(a)a.style.display='none';if(s)s.style.display='none';}
 function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';if(s)s.style.display=userMode==='office'?'none':'';}
-function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';localStorage.setItem("chamunda_erp_login_mode","office");officePage='entry';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';localStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
+function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(!window.firebase||!firebase.auth){if(st)st.textContent="Firebase connect हो रहा है...";loadFirebaseSdk().then(()=>erpLogin(mode)).catch(e=>{if(st)st.textContent="Internet connection/Firebase load check करें";});return;}if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';localStorage.setItem("chamunda_erp_login_mode","office");officePage='entry';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';localStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
 function erpLogout(){
   try{clearTimeout(cloudPushTimer);}catch(e){}
   try{if(cloudUnsub){cloudUnsub();cloudUnsub=null;}}catch(e){}
@@ -191,7 +187,30 @@ function ensureFirebaseApp(c){
   try{return firebase.app();}
   catch(e){return firebase.initializeApp(c);}
 }
-function initCloud(){if(cloudInitInProgress)return cloudReady;cloudInitInProgress=true;try{const c=getCloudConfig();if(!c||!c.apiKey||!c.projectId||!c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}if(!window.firebase||!firebase.database||!firebase.auth){cloudStatus('⚠ Firebase SDK load नहीं हुआ');return false;}if(cloudUnsub){try{cloudUnsub();}catch(e){}cloudUnsub=null;}cloudApp=ensureFirebaseApp(c);const path='chamundaERP/data';const startDb=()=>{cloudRef=firebase.database().ref(path);cloudReady=false;cloudStatus('● Connecting...',true);const handleValue=snap=>{try{if(!snap||typeof snap.val!=='function')throw new Error('Cloud snapshot नहीं मिला');const remote=snap.val();if(remote&&remote.sales){if(cloudWriting)return;cloudWriting=true;const before=JSON.stringify(remote);db=remote;migrate();const changed=JSON.stringify(db)!==before;localStorage.setItem(KEY,JSON.stringify(db));cloudWriting=false;cloudReady=true;if(changed)setTimeout(()=>cloudPush(),50);cloudStatus('● Live Sync चालू',true);if(page==='settings')settings();else render();}else{cloudReady=true;cloudStatus('● Cloud connected — अभी data नहीं है',true);if(db.sales?.length||db.customers?.length)scheduleCloudPush();render();}}catch(e){cloudWriting=false;cloudReady=false;cloudStatus('⚠ Cloud data error: '+(e.message||e));}};cloudUnsub=cloudRef.on('value',handleValue,err=>{cloudReady=false;cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));});};const savedMode=localStorage.getItem("chamunda_erp_login_mode");
+let firebaseSdkPromise=null;
+function loadFirebaseSdk(){
+  if(window.firebase&&firebase.database&&firebase.auth)return Promise.resolve(window.firebase);
+  if(firebaseSdkPromise)return firebaseSdkPromise;
+  const urls=[
+    "https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js",
+    "https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js",
+    "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"
+  ];
+  firebaseSdkPromise=(async()=>{
+    for(const url of urls){
+      await new Promise((resolve,reject)=>{
+        const sc=document.createElement("script");
+        sc.src=url;sc.async=true;
+        sc.onload=resolve;
+        sc.onerror=()=>reject(new Error("Firebase SDK load failed"));
+        document.head.appendChild(sc);
+      });
+    }
+    return window.firebase;
+  })().catch(e=>{firebaseSdkPromise=null;throw e});
+  return firebaseSdkPromise;
+}
+function initCloud(){if(cloudInitInProgress)return cloudReady;if(!window.firebase||!firebase.database||!firebase.auth){loadFirebaseSdk().then(()=>initCloud()).catch(e=>cloudStatus("⚠ Firebase SDK load नहीं हुआ"));return false;}cloudInitInProgress=true;try{const c=getCloudConfig();if(!c||!c.apiKey||!c.projectId||!c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}if(!window.firebase||!firebase.database||!firebase.auth){cloudStatus('⚠ Firebase SDK load नहीं हुआ');return false;}if(cloudUnsub){try{cloudUnsub();}catch(e){}cloudUnsub=null;}cloudApp=ensureFirebaseApp(c);const path='chamundaERP/data';const startDb=()=>{cloudRef=firebase.database().ref(path);cloudReady=false;cloudStatus('● Connecting...',true);const handleValue=snap=>{try{if(!snap||typeof snap.val!=='function')throw new Error('Cloud snapshot नहीं मिला');const remote=snap.val();if(remote&&remote.sales){if(cloudWriting)return;cloudWriting=true;const before=JSON.stringify(remote);db=remote;migrate();const changed=JSON.stringify(db)!==before;localStorage.setItem(KEY,JSON.stringify(db));cloudWriting=false;cloudReady=true;if(changed)setTimeout(()=>cloudPush(),50);cloudStatus('● Live Sync चालू',true);if(page==='settings')settings();else render();}else{cloudReady=true;cloudStatus('● Cloud connected — अभी data नहीं है',true);if(db.sales?.length||db.customers?.length)scheduleCloudPush();render();}}catch(e){cloudWriting=false;cloudReady=false;cloudStatus('⚠ Cloud data error: '+(e.message||e));}};cloudUnsub=cloudRef.on('value',handleValue,err=>{cloudReady=false;cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));});};const savedMode=localStorage.getItem("chamunda_erp_login_mode");
 if(firebase.auth().currentUser&&savedMode){
   authUser=firebase.auth().currentUser;userMode=savedMode;startDb();return true;
 }
@@ -720,7 +739,7 @@ function resetData(){if(confirm("सारा local data delete करना ह
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))).catch(()=>{}));
 if("caches" in window)window.addEventListener("load",()=>caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{}));
 function bootERP(){
-  try{hideLogin();render();}catch(e){
+  try{if(userMode){hideLogin();render();}else{showLogin();}}catch(e){
     console.error('ERP boot error',e);
     const app=document.getElementById('app');
     if(app)app.innerHTML='<div class="panel"><h3>⚠️ ERP Load Error</h3><div class="notice">Software load करते समय समस्या आई। कृपया Refresh करें।</div><div class="muted">'+esc(e?.message||e)+'</div></div>';
