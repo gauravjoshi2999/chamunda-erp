@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "chamundaERP": {
+      "data": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}
