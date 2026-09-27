@@ -34,7 +34,7 @@ jobs:
           python3 - <<'PY'
           import re
           s=open("site/index.html",encoding="utf-8").read()
-          scripts=re.findall(r"<script[^>]*>([\\s\\S]*?)</script>",s,re.I)
+          scripts=re.findall(r"<script[^>]*>(.*?)</script>",s,re.I|re.S)
           open("/tmp/app.js","w",encoding="utf-8").write(scripts[-1])
           print("Checking script",len(scripts[-1]))
           PY
