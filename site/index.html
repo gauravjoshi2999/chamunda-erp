@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1769d3">
 <link rel="manifest" href="manifest.json">
-<title>Chamunda ERP V13</title>
+<title>Chamunda ERP V18</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;padding:0;background:#f3f6f9;color:#17202a;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:flex}
@@ -32,7 +32,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 <div class="toast" id="toast"></div>
 <script>
 const KEY="chamunda_erp_v1";
-const ERP_VERSION="V17";
+const ERP_VERSION="V18";
 const FINAL_CUSTOMER_DELETE_V17=true;
 // Chamunda ERP Firebase Live Sync (Firebase Web App config)
 const BUILTIN_FIREBASE_CONFIG={
@@ -66,7 +66,17 @@ function showLogin(){const g=document.getElementById('loginGate'),o=document.get
 function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='block';if(a)a.style.display='none';}
 function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';}
 function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';sessionStorage.setItem("chamunda_erp_login_mode","office");hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';sessionStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
-function erpLogout(){sessionStorage.removeItem("chamunda_erp_login_mode");userMode='admin';firebase.auth().signOut();}
+function erpLogout(){
+  try{clearTimeout(cloudPushTimer);}catch(e){}
+  try{if(cloudUnsub){cloudUnsub();cloudUnsub=null;}}catch(e){}
+  cloudRef=null;cloudReady=false;cloudInitInProgress=false;authUser=null;
+  sessionStorage.removeItem("chamunda_erp_login_mode");
+  userMode='admin';
+  try{if(window.firebase&&firebase.auth)firebase.auth().signOut().catch(()=>{});}catch(e){}
+  showLogin();
+  const st=document.getElementById('loginStatus');
+  if(st)st.textContent='आप Logout हो चुके हैं।';
+}
 function getCloudConfig(){return BUILTIN_FIREBASE_CONFIG}
 function scheduleCloudPush(){clearTimeout(cloudPushTimer);cloudPushTimer=setTimeout(cloudPush,150)}
 function ensureFirebaseApp(c){
@@ -169,22 +179,32 @@ document.getElementById('app').innerHTML=header('👷 Office Entry','Office staf
 +'<div class="notice"><b>Office Login:</b> यहाँ केवल entry का काम रहेगा। Date बदलकर पिछली तारीख की entry भी कर सकते हैं।</div>'
 +'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
 +field('Serial Number','officeSerial','number',officeNextSerial(),'','readonly')
-+field('Date','officeDate','date',selectedDate)
-+field('Time','officeTime','time',currentTime())
-+field('Customer Name','officeCustomer')
-+field('Place','officePlace')
-+field('Vehicle Number','officeVehicle')
++field('Date','officeDate','date',selectedDate,'','required')
++field('Time','officeTime','time',currentTime(),'','required')
++field('Customer Name','officeCustomer','text','','','required autocomplete="off"')
++field('Place','officePlace','text','','','required')
++field('Vehicle Number','officeVehicle','text','','','required')
 +'<div class="field"><label>Material</label><select name="officeMaterial" id="officeMaterial" required>'+materialOptions+'</select></div>'
-+field('Weight (MT)','officeWeight','text','','','inputmode="decimal" placeholder="जैसे 9 या 9000 या 12.530"')
-+field('Naka Parchi','officeNaka')
++field('Weight (MT)','officeWeight','text','','','required inputmode="decimal" placeholder="जैसे 9 या 9000 या 12.530"')
++field('Naka Parchi','officeNaka','text','','','required')
 +'</div><div class="actions"><button class="btn primary" type="submit">✓ Save Office Entry</button><button class="btn" type="button" onclick="officeEntry()">Clear</button></div></form></div>'
 +'<div class="panel"><div class="top"><div><h3 style="margin:0">Date-wise Office Entries</h3><div class="muted">'+dmy(selectedDate)+' की entries</div></div><input class="field search" style="min-height:42px" type="date" value="'+selectedDate+'" onchange="window.officeFilterDate=this.value;officeEntry()"></div>'
 +'<div class="tablewrap"><table><tr><th>Serial</th><th>Date</th><th>Time</th><th>Customer Name</th><th>Place</th><th>Vehicle Number</th><th>Material</th><th>Weight</th><th>Naka</th><th>Action</th></tr>'+ (tableRows||'<tr><td colspan="10" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>') +'</table></div></div>';
 }
 function saveOfficeEntry(e){
 e.preventDefault();
-const date=readInput('officeDate',today()),time=readInput('officeTime',currentTime()),customer=readInput('officeCustomer'),place=readInput('officePlace'),vehicle=readInput('officeVehicle'),material=readInput('officeMaterial'),weight=normalizeWeight(readInput('officeWeight')),naka=readInput('officeNaka');
-if(!date||!time||!customer||!place||!vehicle||!material||weight===null||!naka)return alert('सभी Office Entry fields भरें');
+const form=e.currentTarget;
+if(!form){alert('Office Entry form नहीं मिला।');return;}
+if(!form.reportValidity())return;
+const get=n=>String(form.elements[n]?.value??'').trim();
+const date=get('officeDate')||today(),time=get('officeTime')||currentTime(),customer=get('officeCustomer'),place=get('officePlace'),vehicle=get('officeVehicle'),material=get('officeMaterial'),rawWeight=get('officeWeight'),naka=get('officeNaka');
+const missing=[
+  ['officeDate','Date'],['officeTime','Time'],['officeCustomer','Customer Name'],['officePlace','Place'],
+  ['officeVehicle','Vehicle Number'],['officeMaterial','Material'],['officeWeight','Weight (MT)'],['officeNaka','Naka Parchi']
+].filter(([key])=>!get(key)).map(([,label])=>label);
+if(missing.length){alert('ये Office Entry fields भरना जरूरी है:\\n• '+missing.join('\\n• '));return;}
+const weight=normalizeWeight(rawWeight);
+if(weight===null){alert('Weight सही डालें। उदाहरण: 9 या 9000 या 12.530');form.elements.officeWeight?.focus();return;}
 db.officeEntries??=[];
 const serial=officeNextSerial();
 db.officeEntries.push({date,time,serial,customer,place,vehicle,material,weight,naka,status:'pending',_id:'office_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
