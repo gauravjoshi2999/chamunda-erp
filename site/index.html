@@ -27,7 +27,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
   <div class="brand">CHAMUNDA ERP<small>Crusher / Gitti Management</small></div>
   <div class="nav" id="nav"></div>
 </aside>
-<main class="main" id="app"></main><div id="loginGate" style="display:none;max-width:520px;margin:40px auto;padding:24px"><div class="panel"><h2>🔐 Chamunda ERP Login</h2><div class="notice">यह ERP केवल authorized user के लिए है।</div><div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="username" placeholder="Login email"></div><div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></div><button class="btn primary" style="margin-top:12px;width:100%" onclick="erpLogin()">🔐 Login</button><p class="muted" id="loginStatus"></p></div></div>
+<main class="main" id="app"></main><div id="loginGate" style="display:none;max-width:520px;margin:40px auto;padding:24px"><div class="panel"><h2>🔐 Chamunda ERP Login</h2><div class="notice">यह ERP केवल authorized user के लिए है।</div><div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="username" placeholder="Login email"></div><div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></div><button class="btn primary" style="margin-top:12px;width:100%" onclick="erpLogin('admin')">🔐 Login</button><button class="btn" style="margin-top:10px;width:100%" onclick="showOfficeLogin()">👷 Office Login</button><p class="muted" id="loginStatus"></p></div></div><div id="officeLoginGate" style="display:none;max-width:520px;margin:40px auto;padding:24px"><div class="panel"><h2>👷 Office Login</h2><div class="notice">Office staff के लिए सिर्फ entry वाला screen खुलेगा।</div><div class="field"><label>Email</label><input id="officeLoginEmail" type="email" autocomplete="username" placeholder="Office login email"></div><div class="field"><label>Password</label><input id="officeLoginPassword" type="password" autocomplete="current-password" placeholder="Password"></div><button class="btn green" style="margin-top:12px;width:100%" onclick="erpLogin('office')">👷 Office Login</button><button class="btn" style="margin-top:10px;width:100%" onclick="showLogin()">← Main Login</button><p class="muted" id="officeLoginStatus"></p></div></div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -49,11 +49,12 @@ const dmy=d=>{if(!d)return "";let [y,m,dd]=String(d).slice(0,10).split("-");retu
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
 const num=n=>Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:3});
 let db=load();migrate();
+let userMode=sessionStorage.getItem("chamunda_erp_login_mode")||"admin";
 let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false,authUser=null;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
-function blank(){return {sales:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["12 MM","6 MM","20 MM","Dust","M-Sand"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
+function blank(){return {sales:[],officeEntries:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["12 MM","6 MM","20 MM","Dust","M-Sand"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
 function migrate(){
-  db.sales??=[];db.sales.forEach((x,i)=>{x._id??=`sale_${x.serial||i+1}_${x.date||today()}_${i}`});
+  db.sales??=[];db.officeEntries??=[];db.officeEntries.forEach((x,i)=>{x._id??="office_"+(x.serial||i+1)+"_"+(x.date||today())+"_"+i});db.sales.forEach((x,i)=>{x._id??=`sale_${x.serial||i+1}_${x.date||today()}_${i}`});
   db.customers??=[];db.customerPayments??=[];db.customerAdjustments??=[];db.settings??={};if(!db.settings.gauravOpeningBalanceSeeded){let g=db.customers.find(c=>String(c?.name||'').trim().toLowerCase()==='gaurav');if(!g){db.customers.push({name:'Gaurav',mobile:'',created:today(),openingBalance:100000});}else if(g.openingBalance==null){g.openingBalance=100000;}db.settings.gauravOpeningBalanceSeeded=true;}db.dieselIn??=[];db.bharav??=[];db.royalty??=[];db.settings??={};db.settings.materials??=["12 MM","6 MM","20 MM","Dust","M-Sand"];db.settings.materials=[...new Set((db.settings.materials||[]).map(x=>String(x||'').trim()).filter(Boolean))];db.settings.bharavRate??=150;db.settings.requiredFields??={};db.settings.hiddenMenus??=[];db.settings.customFields??=[];db.settings.cloudSync??={enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"};db.settings.cloudSync.path??="chamundaERP/data";db.settings.cloudSync.config??=BUILTIN_FIREBASE_CONFIG;db.settings.cloudSync.enabled??=true;localStorage.setItem(KEY,JSON.stringify(db))}
 function save(){localStorage.setItem(KEY,JSON.stringify(db)); if(db.settings?.cloudSync?.enabled && !cloudWriting) scheduleCloudPush()}
 function cloudStatus(msg,ok=false){let el=document.getElementById('cloudStatus');if(el){el.textContent=msg;el.style.color=ok?'#15803d':'#b45309'}}
@@ -61,10 +62,11 @@ function readInput(id,fallback=''){
   const el=document.getElementById(id);
   return el ? String(el.value ?? '').trim() : fallback;
 }
-function showLogin(){const g=document.getElementById('loginGate'),a=document.getElementById('app');if(g)g.style.display='block';if(a)a.style.display='none';}
-function hideLogin(){const g=document.getElementById('loginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(a)a.style.display='block';}
-function erpLogin(){const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||''),st=document.getElementById('loginStatus');if(!email||!password){if(st)st.textContent='Email और Password दोनों डालें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
-function erpLogout(){firebase.auth().signOut();}
+function showLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='block';if(o)o.style.display='none';if(a)a.style.display='none';}
+function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='block';if(a)a.style.display='none';}
+function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';}
+function erpLogin(mode='admin'){const office=mode==='office',email=String(document.getElementById(office?'officeLoginEmail':'loginEmail')?.value||'').trim(),password=String(document.getElementById(office?'officeLoginPassword':'loginPassword')?.value||''),st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(!email||!password){if(st)st.textContent='Email और Password दोनों डालें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode=mode;sessionStorage.setItem("chamunda_erp_login_mode",mode);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
+function erpLogout(){sessionStorage.removeItem("chamunda_erp_login_mode");userMode='admin';firebase.auth().signOut();}
 function getCloudConfig(){return BUILTIN_FIREBASE_CONFIG}
 function scheduleCloudPush(){clearTimeout(cloudPushTimer);cloudPushTimer=setTimeout(cloudPush,150)}
 function ensureFirebaseApp(c){
@@ -72,7 +74,7 @@ function ensureFirebaseApp(c){
   try{return firebase.app();}
   catch(e){return firebase.initializeApp(c);}
 }
-function initCloud(){if(cloudInitInProgress)return cloudReady;cloudInitInProgress=true;try{const c=getCloudConfig();if(!c||!c.apiKey||!c.projectId||!c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}if(!window.firebase||!firebase.database||!firebase.auth){cloudStatus('⚠ Firebase SDK load नहीं हुआ');return false;}if(cloudUnsub){try{cloudUnsub();}catch(e){}cloudUnsub=null;}cloudApp=ensureFirebaseApp(c);const path='chamundaERP/data';const startDb=()=>{cloudRef=firebase.database().ref(path);cloudReady=false;cloudStatus('● Connecting...',true);const handleValue=snap=>{try{if(!snap||typeof snap.val!=='function')throw new Error('Cloud snapshot नहीं मिला');const remote=snap.val();if(remote&&remote.sales){if(cloudWriting)return;cloudWriting=true;const before=JSON.stringify(remote);db=remote;migrate();const changed=JSON.stringify(db)!==before;localStorage.setItem(KEY,JSON.stringify(db));cloudWriting=false;cloudReady=true;if(changed)setTimeout(()=>cloudPush(),50);cloudStatus('● Live Sync चालू',true);if(page==='settings')settings();else render();}else{cloudReady=true;cloudStatus('● Cloud connected — अभी data नहीं है',true);if(db.sales?.length||db.customers?.length)scheduleCloudPush();}}catch(e){cloudWriting=false;cloudReady=false;cloudStatus('⚠ Cloud data error: '+(e.message||e));}};cloudUnsub=cloudRef.on('value',handleValue,err=>{cloudReady=false;cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));});};if(firebase.auth().currentUser){authUser=firebase.auth().currentUser;startDb();return true;}showLogin();return false;}catch(e){cloudReady=false;cloudStatus('⚠ Setup error: '+(e.message||e));return false;}finally{cloudInitInProgress=false;}}
+function initCloud(){if(cloudInitInProgress)return cloudReady;cloudInitInProgress=true;try{const c=getCloudConfig();if(!c||!c.apiKey||!c.projectId||!c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}if(!window.firebase||!firebase.database||!firebase.auth){cloudStatus('⚠ Firebase SDK load नहीं हुआ');return false;}if(cloudUnsub){try{cloudUnsub();}catch(e){}cloudUnsub=null;}cloudApp=ensureFirebaseApp(c);const path='chamundaERP/data';const startDb=()=>{cloudRef=firebase.database().ref(path);cloudReady=false;cloudStatus('● Connecting...',true);const handleValue=snap=>{try{if(!snap||typeof snap.val!=='function')throw new Error('Cloud snapshot नहीं मिला');const remote=snap.val();if(remote&&remote.sales){if(cloudWriting)return;cloudWriting=true;const before=JSON.stringify(remote);db=remote;migrate();const changed=JSON.stringify(db)!==before;localStorage.setItem(KEY,JSON.stringify(db));cloudWriting=false;cloudReady=true;if(changed)setTimeout(()=>cloudPush(),50);cloudStatus('● Live Sync चालू',true);if(page==='settings')settings();else render();}else{cloudReady=true;cloudStatus('● Cloud connected — अभी data नहीं है',true);if(db.sales?.length||db.customers?.length)scheduleCloudPush();}}catch(e){cloudWriting=false;cloudReady=false;cloudStatus('⚠ Cloud data error: '+(e.message||e));}};cloudUnsub=cloudRef.on('value',handleValue,err=>{cloudReady=false;cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));});};if(firebase.auth().currentUser){authUser=firebase.auth().currentUser;userMode=sessionStorage.getItem("chamunda_erp_login_mode")||"admin";startDb();return true;}showLogin();return false;}catch(e){cloudReady=false;cloudStatus('⚠ Setup error: '+(e.message||e));return false;}finally{cloudInitInProgress=false;}}
 function cloudPush(){
   if(!cloudRef||cloudWriting||!cloudReady)return;
   const payload=JSON.parse(JSON.stringify(db));
@@ -149,11 +151,47 @@ function select(label,name,opts,value=""){return `<div class="field"><label>${la
 function header(title,sub,button=""){return `<div class="top"><div><div class="title">${title}</div><div class="muted">${sub}</div></div>${button}</div>`}
 function render(){nav();({dashboard:dash,sale,sale:bla,bharav,royalty,diesel,reports,backup}[page]||dash)();if(page==="sale")sale();} 
 // explicit dispatcher avoids shorthand ambiguity
-function render(){nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
+function render(){if(userMode==='office'){officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
 function normalizeWeight(raw){const s=String(raw??'').trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
 function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
 function totals(){let sales=db.sales;return{entries:sales.length,weight:sales.reduce((a,x)=>a+Number(x.weight||0),0),amount:sales.reduce((a,x)=>a+Number(x.total||0),0),cash:sales.filter(x=>x.payment==="Cash").reduce((a,x)=>a+Number(x.total||0),0),udhar:sales.filter(x=>x.payment==="Udhar").reduce((a,x)=>a+Number(x.total||0),0)}}
+function officeNextSerial(){return Math.max(0,...(db.officeEntries||[]).map(x=>Number(x.serial)||0))+1}
+function currentTime(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function officeEntry(){
+db.officeEntries??=[];
+const selectedDate=window.officeFilterDate||today();
+const rows=db.officeEntries.filter(x=>x.date===selectedDate).sort((a,b)=>Number(b.serial||0)-Number(a.serial||0));
+const mats=db.settings.materials||[];
+const materialOptions=mats.map(x=>'<option>'+esc(x)+'</option>').join('');
+const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+dmy(x.date)+'</td><td>'+esc(x.time)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.place)+'</td><td>'+esc(x.vehicle)+'</td><td>'+esc(x.material)+'</td><td>'+num(x.weight)+' MT</td><td>'+esc(x.naka)+'</td><td><button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeEntry(this.dataset.id)">Delete</button></td></tr>').join('');
+document.getElementById('app').innerHTML=header('👷 Office Entry','Office staff के लिए सरल entry screen','<button class="btn danger" onclick="erpLogout()">Logout</button>')
++'<div class="notice"><b>Office Login:</b> यहाँ केवल entry का काम रहेगा। Date बदलकर पिछली तारीख की entry भी कर सकते हैं।</div>'
++'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
++field('Serial Number','officeSerial','number',officeNextSerial(),'','readonly')
++field('Date','officeDate','date',selectedDate)
++field('Time','officeTime','time',currentTime())
++field('Customer Name','officeCustomer')
++field('Place','officePlace')
++field('Vehicle Number','officeVehicle')
++'<div class="field"><label>Material</label><select name="officeMaterial" id="officeMaterial" required>'+materialOptions+'</select></div>'
++field('Weight (MT)','officeWeight','text','','','inputmode="decimal" placeholder="जैसे 9 या 9000 या 12.530"')
++field('Naka Parchi','officeNaka')
++'</div><div class="actions"><button class="btn primary" type="submit">✓ Save Office Entry</button><button class="btn" type="button" onclick="officeEntry()">Clear</button></div></form></div>'
++'<div class="panel"><div class="top"><div><h3 style="margin:0">Date-wise Office Entries</h3><div class="muted">'+dmy(selectedDate)+' की entries</div></div><input class="field search" style="min-height:42px" type="date" value="'+selectedDate+'" onchange="window.officeFilterDate=this.value;officeEntry()"></div>'
++'<div class="tablewrap"><table><tr><th>Serial</th><th>Date</th><th>Time</th><th>Customer Name</th><th>Place</th><th>Vehicle Number</th><th>Material</th><th>Weight</th><th>Naka</th><th>Action</th></tr>'+ (tableRows||'<tr><td colspan="10" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>') +'</table></div></div>';
+}
+function saveOfficeEntry(e){
+e.preventDefault();
+const date=readInput('officeDate',today()),time=readInput('officeTime',currentTime()),customer=readInput('officeCustomer'),place=readInput('officePlace'),vehicle=readInput('officeVehicle'),material=readInput('officeMaterial'),weight=normalizeWeight(readInput('officeWeight')),naka=readInput('officeNaka');
+if(!date||!time||!customer||!place||!vehicle||!material||weight===null||!naka)return alert('सभी Office Entry fields भरें');
+db.officeEntries??=[];
+const serial=officeNextSerial();
+db.officeEntries.push({date,time,serial,customer,place,vehicle,material,weight,naka,_id:'office_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
+if(customer&&!db.customers.some(c=>String(c.name||'').trim().toLowerCase()===customer.toLowerCase()))db.customers.push({name:customer,mobile:'',created:date});
+save();window.officeFilterDate=date;toast('Office entry save हो गई');officeEntry();
+}
+function deleteOfficeEntry(id){if(!id)return;if(!confirm('यह Office entry delete करनी है?'))return;db.officeEntries=(db.officeEntries||[]).filter(x=>x._id!==id);save();toast('Office entry delete हो गई');officeEntry()}
 function dash(){let t=totals(), b=db.bharav.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.tractors||0),0),ri=db.dieselIn.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.litres||0),0);document.getElementById("app").innerHTML=header("Office Dashboard","आज की entry के लिए आसान screen",`<button class="btn primary" onclick="go('sale')">+ नई Sale Entry</button>`)
 +`<div class="cards"><div class="card"><div class="label">आज की Sale Entries</div><div class="num">${t.entries}</div></div><div class="card"><div class="label">Total Weight</div><div class="num">${num(t.weight)} MT</div></div><div class="card"><div class="label">Total Sale</div><div class="num">${money(t.amount)}</div></div><div class="card"><div class="label">Cash</div><div class="num">${money(t.cash)}</div></div><div class="card"><div class="label">Udhar</div><div class="num">${money(t.udhar)}</div></div></div>`
 +`<div class="panel"><h3>आज का छोटा सारांश</h3><div class="reportgrid"><div class="reportbox">भराव Tractor<b>${b}</b></div><div class="reportbox">Royalty Difference<b>${num(db.royalty.filter(x=>x.date===today()).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0))} MT</b></div><div class="reportbox">Diesel आया<b>${num(ri)} L</b></div></div></div>`
