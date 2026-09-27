@@ -32,7 +32,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 <div class="toast" id="toast"></div>
 <script>
 const KEY="chamunda_erp_v1";
-const ERP_VERSION="V18";
+const ERP_VERSION="V19";
 const FINAL_CUSTOMER_DELETE_V17=true;
 // Chamunda ERP Firebase Live Sync (Firebase Web App config)
 const BUILTIN_FIREBASE_CONFIG={
@@ -55,7 +55,7 @@ function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(
 function blank(){return {sales:[],officeEntries:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["12 MM","6 MM","20 MM","Dust","M-Sand"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
 function migrate(){
   db.sales??=[];db.officeEntries??=[];db.officeEntries.forEach((x,i)=>{x._id??="office_"+(x.serial||i+1)+"_"+(x.date||today())+"_"+i});db.sales.forEach((x,i)=>{x._id??=`sale_${x.serial||i+1}_${x.date||today()}_${i}`});
-  db.customers??=[];db.customerPayments??=[];db.customerAdjustments??=[];db.settings??={};if(!db.settings.gauravOpeningBalanceSeeded){let g=db.customers.find(c=>String(c?.name||'').trim().toLowerCase()==='gaurav');if(!g){db.customers.push({name:'Gaurav',mobile:'',created:today(),openingBalance:100000});}else if(g.openingBalance==null){g.openingBalance=100000;}db.settings.gauravOpeningBalanceSeeded=true;}db.dieselIn??=[];db.bharav??=[];db.royalty??=[];db.settings??={};db.settings.materials??=["12 MM","6 MM","20 MM","Dust","M-Sand"];db.settings.materials=[...new Set((db.settings.materials||[]).map(x=>String(x||'').trim()).filter(Boolean))];db.settings.bharavRate??=150;db.settings.requiredFields??={};db.settings.hiddenMenus??=[];db.settings.customFields??=[];db.settings.cloudSync??={enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"};db.settings.cloudSync.path??="chamundaERP/data";db.settings.cloudSync.config??=BUILTIN_FIREBASE_CONFIG;db.settings.cloudSync.enabled??=true;localStorage.setItem(KEY,JSON.stringify(db))}
+  db.customers??=[];db.customerPayments??=[];db.customerAdjustments??=[];db.settings??={};if(!db.settings.gauravOpeningBalanceSeeded){let g=db.customers.find(c=>String(c?.name||'').trim().toLowerCase()==='gaurav');if(!g){db.customers.push({name:'Gaurav',mobile:'',created:today(),openingBalance:100000});}else if(g.openingBalance==null){g.openingBalance=100000;}db.settings.gauravOpeningBalanceSeeded=true;}db.dieselIn??=[];db.bharav??=[];db.bharavPayments??=[];db.royalty??=[];db.settings??={};db.settings.materials??=["12 MM","6 MM","20 MM","Dust","M-Sand"];db.settings.materials=[...new Set((db.settings.materials||[]).map(x=>String(x||'').trim()).filter(Boolean))];db.settings.bharavRate??=150;db.settings.requiredFields??={};db.settings.hiddenMenus??=[];db.settings.customFields??=[];db.settings.cloudSync??={enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"};db.settings.cloudSync.path??="chamundaERP/data";db.settings.cloudSync.config??=BUILTIN_FIREBASE_CONFIG;db.settings.cloudSync.enabled??=true;localStorage.setItem(KEY,JSON.stringify(db))}
 function save(){localStorage.setItem(KEY,JSON.stringify(db)); if(db.settings?.cloudSync?.enabled && !cloudWriting) scheduleCloudPush()}
 function cloudStatus(msg,ok=false){let el=document.getElementById('cloudStatus');if(el){el.textContent=msg;el.style.color=ok?'#15803d':'#b45309'}}
 function readInput(id,fallback=''){
@@ -65,12 +65,12 @@ function readInput(id,fallback=''){
 function showLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='block';if(o)o.style.display='none';if(a)a.style.display='none';}
 function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='block';if(a)a.style.display='none';}
 function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';}
-function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';sessionStorage.setItem("chamunda_erp_login_mode","office");hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';sessionStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
+function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';sessionStorage.setItem("chamunda_erp_login_mode","office");officePage='entry';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';sessionStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
 function erpLogout(){
   try{clearTimeout(cloudPushTimer);}catch(e){}
   try{if(cloudUnsub){cloudUnsub();cloudUnsub=null;}}catch(e){}
   cloudRef=null;cloudReady=false;cloudInitInProgress=false;authUser=null;
-  sessionStorage.removeItem("chamunda_erp_login_mode");
+  sessionStorage.removeItem("chamunda_erp_login_mode");sessionStorage.removeItem("chamunda_office_page");
   userMode='admin';
   try{if(window.firebase&&firebase.auth)firebase.auth().signOut().catch(()=>{});}catch(e){}
   showLogin();
@@ -161,7 +161,15 @@ function select(label,name,opts,value=""){return `<div class="field"><label>${la
 function header(title,sub,button=""){return `<div class="top"><div><div class="title">${title}</div><div class="muted">${sub}</div></div>${button}</div>`}
 function render(){nav();({dashboard:dash,sale,sale:bla,bharav,royalty,diesel,reports,backup}[page]||dash)();if(page==="sale")sale();} 
 // explicit dispatcher avoids shorthand ambiguity
-function render(){if(userMode==='office'){officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
+let officePage=sessionStorage.getItem("chamunda_office_page")||"entry";
+function officeNav(){
+  const n=document.getElementById('officeNav');
+  if(!n)return;
+  n.innerHTML='<button class="'+(officePage==='entry'?'active':'')+'" onclick="officePage=\'entry\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeEntry()">📝 Office Entry</button>'+
+             '<button class="'+(officePage==='bharav'?'active':'')+'" onclick="officePage=\'bharav\';sessionStorage.setItem(\'chamunda_office_page\',officePage);officeBharav()">🚜 भराव</button>'+
+             '<button class="danger" onclick="erpLogout()">Logout</button>';
+}
+function render(){if(userMode==='office'){if(officePage==='bharav')officeBharav();else officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
 function normalizeWeight(raw){const s=String(raw??'').trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
 function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
@@ -175,8 +183,8 @@ const rows=db.officeEntries.filter(x=>x.date===selectedDate).sort((a,b)=>Number(
 const mats=db.settings.materials||[];
 const materialOptions=mats.map(x=>'<option>'+esc(x)+'</option>').join('');
 const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+dmy(x.date)+'</td><td>'+esc(x.time)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.place)+'</td><td>'+esc(x.vehicle)+'</td><td>'+esc(x.material)+'</td><td>'+num(x.weight)+' MT</td><td>'+esc(x.naka)+'</td><td><button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeEntry(this.dataset.id)">Delete</button></td></tr>').join('');
-document.getElementById('app').innerHTML=header('👷 Office Entry','Office staff के लिए सरल entry screen','<button class="btn danger" onclick="erpLogout()">Logout</button>')
-+'<div class="notice"><b>Office Login:</b> यहाँ केवल entry का काम रहेगा। Date बदलकर पिछली तारीख की entry भी कर सकते हैं।</div>'
+document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+header('👷 Office Entry','Office staff के लिए सरल entry screen','')
++'<div class="notice"><b>Office Login:</b> यहाँ Office Entry और भराव दोनों की entry की जा सकती है। Save होने के बाद यही data Main Login के Bharav section में तुरंत दिखाई देगा।</div>'
 +'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
 +field('Serial Number','officeSerial','number',officeNextSerial(),'','readonly')
 +field('Date','officeDate','date',selectedDate,'','required')
@@ -262,6 +270,52 @@ function openCustomerLedger(name,fromDate,toDate){let now=today(),from=fromDate|
 function estimateBill(name,from,to){let rows=db.sales.filter(x=>String(x.customer||"").trim().toLowerCase()===String(name||"").trim().toLowerCase()&&x.date>=from&&x.date<=to),tw=rows.reduce((a,x)=>a+Number(x.weight||0),0),ta=rows.reduce((a,x)=>a+Number(x.total||0),0),w=window.open("","_blank");if(!w){alert("Popup blocked है।");return}w.document.write("<!doctype html><html><head><title>ESTIMATE</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:7px;text-align:left}</style></head><body><h1 style='text-align:center'>ESTIMATE</h1><p><b>Customer:</b> "+esc(name)+"</p><p><b>Date Range:</b> "+dmy(from)+" to "+dmy(to)+"</p><table><tr><th>Date</th><th>Material</th><th>Weight</th><th>Rate</th><th>Total</th></tr>"+rows.map(x=>"<tr><td>"+dmy(x.date)+"</td><td>"+esc(x.material||"")+"</td><td>"+num(x.weight)+" MT</td><td>"+money(x.rate)+"</td><td>"+money(x.total)+"</td></tr>").join("")+"<tr><th colspan='2'>Total</th><th>"+num(tw)+" MT</th><th></th><th>"+money(ta)+"</th></tr></table><p><b>Estimate only — Not a GST Bill.</b></p></body></html>");w.document.close();setTimeout(()=>w.print(),300)}
 function sendCustomerReminder(name,amount){let c=customerByName(name);if(!c.mobile)return alert('इस customer का mobile number saved नहीं है');let digits=String(c.mobile).replace(/\D/g,'');if(digits.length!==10)return alert('Customer mobile 10 digits होना चाहिए');let text='Namaste '+name+', aapka Chamunda ERP mein baki amount '+money(Math.max(0,amount))+' hai. Kripya payment kar dein.';window.open('https://wa.me/91'+digits+'?text='+encodeURIComponent(text),'_blank')}
 async function shareCustomerStatement(name,from,to){let rows=customerLedgerRows(name,from,to),z=customerSummary(name),text='Chamunda ERP — '+name+'\\n'+dmy(from)+' se '+dmy(to)+'\\n\\n'+rows.map(x=>dmy(x.date)+' | '+x.desc+' | Debit '+money(x.debit)+' | Credit '+money(x.credit)).join('\\n')+'\\n\\nBalance: '+money(z.balance);try{if(navigator.share)await navigator.share({title:'Khata — '+name,text});else{await navigator.clipboard?.writeText(text);toast('Statement text copy हो गया')}}catch(e){}}
+function officeBharav(d=today()){
+  db.bharav??=[];
+  db.bharavPayments??=[];
+  const rows=db.bharav.filter(x=>x.date===d).sort((a,b)=>String(b.time||'').localeCompare(String(a.time||'')));
+  const rate=Number(db.settings.bharavRate??150);
+  const trips=rows.reduce((a,x)=>a+(Number(x.tractors)||0),0);
+  const amount=rows.reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const cash=rows.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const udhar=rows.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const names=[...new Set(db.bharav.filter(x=>x.payment==='Udhar'&&x.name).map(x=>x.name))].sort();
+  document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+
+    header('🚜 भराव Entry','Dumper / Trip की संख्या, Rate और Cash / Udhar','')+
+    '<div class="notice"><b>भराव Rate:</b> ₹'+money(rate).replace('₹','')+' प्रति Trip. यह rate Main Login के भराव section से बदला जा सकता है।<br><b>Save होते ही:</b> यह entry Main Login → भराव में चली जाएगी।</div>'+
+    '<div class="panel no-print"><div class="grid"><div class="field"><label>भराव की तारीख</label><input type="date" id="officeBharavViewDate" value="'+d+'"></div><div class="field" style="align-self:end"><button class="btn" onclick="officeBharav(document.getElementById(\'officeBharavViewDate\').value)">उस दिन की Entry देखें</button></div></div></div>'+
+    '<div class="panel"><h3>नई भराव Entry</h3><form id="officeBharavForm"><div class="grid">'+
+    field('Date','date','date',d,'','required')+
+    field('Dumper / Trip कितने?','tractors','number','','','required min="1" step="1"')+
+    field('Rate / Trip','rate','number',rate,'','required min="0" step="0.01"')+
+    field('Total Amount','amount','number','','','readonly required')+
+    select('Payment','payment',['Cash','Udhar'])+
+    '<div class="field" id="officeBharavNameWrap" style="display:none"><label>Udhar किसके नाम?</label><input name="name" id="officeBharavName" list="officeBharavNames" placeholder="नाम चुनें या नया लिखें"><datalist id="officeBharavNames">'+names.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist></div>'+
+    field('Remark','remark','text','','','')+
+    '</div><div class="actions"><button class="btn green" type="submit">✓ Save भराव</button><button class="btn" type="button" onclick="officeBharav()">Clear</button></div></form></div>'+
+    '<div class="panel"><div class="reportgrid"><div class="reportbox">कुल Trip<b>'+trips+'</b></div><div class="reportbox">कुल Amount<b>'+money(amount)+'</b></div><div class="reportbox">Cash<b>'+money(cash)+'</b></div><div class="reportbox">Udhar<b>'+money(udhar)+'</b></div></div></div>'+
+    '<div class="panel"><h3>'+dmy(d)+' का भराव</h3><div class="tablewrap"><table><tr><th>Time</th><th>Dumper / Trip</th><th>Rate</th><th>Total</th><th>Payment</th><th>Udhar Name</th><th>Remark</th></tr>'+
+    (rows.map(x=>'<tr><td>'+esc(x.time||'')+'</td><td>'+num(x.tractors)+'</td><td>'+money(x.rate)+'</td><td>'+money(x.amount)+'</td><td>'+esc(x.payment)+'</td><td>'+esc(x.name||'-')+'</td><td>'+esc(x.remark||'')+'</td></tr>').join('')||'<tr><td colspan="7">इस तारीख की कोई भराव entry नहीं है।</td></tr>')+
+    '</table></div></div>';
+  officeNav();
+  const form=document.getElementById('officeBharavForm'), payment=form.elements.payment, wrap=document.getElementById('officeBharavNameWrap'), nameInput=document.getElementById('officeBharavName'), tripsInput=form.elements.tractors, rateInput=form.elements.rate, amountInput=form.elements.amount;
+  function calc(){const t=Number(tripsInput.value)||0,r=Number(rateInput.value);amountInput.value=(t>0&&Number.isFinite(r))?Number((t*r).toFixed(2)):''}
+  function sync(){const u=payment.value==='Udhar';wrap.style.display=u?'block':'none';nameInput.required=u;if(!u)nameInput.value=''}
+  tripsInput.oninput=calc;rateInput.oninput=calc;payment.onchange=sync;calc();sync();
+  form.onsubmit=e=>{
+    e.preventDefault();
+    if(!form.reportValidity())return;
+    const x=Object.fromEntries(new FormData(form));
+    x.tractors=Number(x.tractors);x.rate=Number(x.rate);x.amount=Number((x.tractors*x.rate).toFixed(2));
+    x.name=x.payment==='Udhar'?(x.name||'').trim():'';
+    x.time=currentTime();
+    x.source='Office';
+    x._id='bharav_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    db.bharav.push(x);save();
+    toast('भराव save हो गया — Main Login में भी दिखाई देगा');
+    officeBharav(x.date);
+  };
+}
 function bharav(d=today()){let todayRows=db.bharav.filter(x=>x.date===d),tr=todayRows.reduce((a,x)=>a+(+x.tractors||0),0),rate=Number(db.settings.bharavRate??150),cash=todayRows.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(+x.amount||0),0),udhar=todayRows.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(+x.amount||0),0),names=[...new Set(db.bharav.filter(x=>x.name).map(x=>x.name))];document.getElementById('app').innerHTML=header('भराव','बस Tractor संख्या और Cash / Udhar चुनें',`<button class="btn" onclick="go('reports')">📊 Report</button>`)+
 `<div class="panel no-print"><div class="grid"><div class="field"><label>भराव की तारीख देखें</label><input type="date" id="bharavViewDate" value="${d}"></div><div class="field" style="align-self:end"><button class="btn" onclick="bharav(document.getElementById('bharavViewDate').value)">उस दिन की Entry देखें</button></div></div></div><div class="panel"><div class="notice"><b>भराव Rate:</b> ₹${money(rate).replace('₹','')} प्रति Tractor &nbsp; <button type="button" class="btn no-print" onclick="editBharavRate()">Rate Edit करें</button><br><span class="muted">Default rate ₹150 है। Rate बदलने पर आगे की entries उसी rate से बनेंगी।</span></div><form id="bharavForm"><div class="grid">${field('Date','date','date',today(),'','required')}${field('Tractor कितने गए?','tractors','number','','','required min="1" step="1"')}${select('Payment','payment',['Cash','Udhar'])}<div class="field" id="bharavNameWrap" style="display:none"><label>Udhar किसके नाम?</label><input name="name" id="bharavName" list="bharavNames" placeholder="नाम चुनें या नया लिखें"><datalist id="bharavNames">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div></div><div class="actions"><button class="btn green">✓ Save भराव</button></div></form></div>
 <div class="panel"><div class="reportgrid"><div class="reportbox">आज के Tractor<b>${tr}</b></div><div class="reportbox">Rate<b>${money(rate)}</b></div><div class="reportbox">Cash<b>${money(cash)}</b></div><div class="reportbox">Udhar<b>${money(udhar)}</b></div></div></div>
