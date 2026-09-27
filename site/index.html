@@ -344,6 +344,7 @@ document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"
 +'<div class="panel"><div class="top"><div><h3 style="margin:0">Date-wise Office Entries</h3><div class="muted">'+dmy(selectedDate)+' की entries</div></div><input class="field search" style="min-height:42px" type="date" value="'+selectedDate+'" onchange="window.officeFilterDate=this.value;officeEntry()"></div>'
 +'<div class="tablewrap"><table><tr><th>Serial</th><th>Date</th><th>Time</th><th>Customer Name</th><th>Place</th><th>Vehicle Number</th><th>Material</th><th>Weight</th><th>Naka</th><th>Action</th></tr>'+ (tableRows||'<tr><td colspan="10" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>') +'</table></div></div>';
 officeNav();
+const ov=document.getElementById('officeVehicleType'),oc=document.getElementById('officeTractorCount'),ow=document.getElementById('officeWeight'),ove=document.getElementById('officeVehicle'),on=document.getElementById('officeNaka'),owrap=ow?.closest('.field'),vwrap=ove?.closest('.field'),nwrap=on?.closest('.field'),cwrap=document.getElementById('officeTractorCountWrap');function syncOfficeVehicle(){const isT=ov?.value==='Tractor';if(cwrap)cwrap.style.display=isT?'block':'none';if(owrap)owrap.style.display=isT?'none':'block';if(vwrap)vwrap.style.display=isT?'none':'block';if(nwrap)nwrap.style.display=isT?'none':'block';if(oc)oc.required=isT;if(ow)ow.required=!isT;if(ove)ove.required=!isT;if(on)on.required=!isT}ov?.addEventListener('change',syncOfficeVehicle);syncOfficeVehicle();
 }
 function saveOfficeEntry(e){
 e.preventDefault();
