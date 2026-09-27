@@ -256,11 +256,23 @@ function req(name){return (db.settings.requiredFields||{})[name]===false?"":"req
 function normalizeWeight(raw){const s=String(raw??'').trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
 function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
 function totals(){let sales=db.sales;return{entries:sales.length,weight:sales.reduce((a,x)=>a+Number(x.weight||0),0),amount:sales.reduce((a,x)=>a+Number(x.total||0),0),cash:sales.filter(x=>x.payment==="Cash").reduce((a,x)=>a+Number(x.total||0),0),udhar:sales.filter(x=>x.payment==="Udhar").reduce((a,x)=>a+Number(x.total||0),0)}}
-function officeNextSerial(){return Math.max(0,...(db.officeEntries||[]).map(x=>Number(x.serial)||0))+1}
+function normalizeOfficeSerials(){
+ const groups={};
+ (db.officeEntries||[]).forEach(x=>{const d=x.date||'';(groups[d]??=[]).push(x)});
+ Object.values(groups).forEach(arr=>{
+   arr.sort((a,b)=>(Number(a.serial)||0)-(Number(b.serial)||0)||String(a._id||'').localeCompare(String(b._id||'')));
+   arr.forEach((x,i)=>x.serial=i+1);
+ });
+}
+function officeNextSerial(date){
+ const d=date||today();
+ return Math.max(0,...(db.officeEntries||[]).filter(x=>x.date===d).map(x=>Number(x.serial)||0))+1;
+}
 function currentTime(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function officeEntry(){
 db.officeEntries??=[];
 const selectedDate=window.officeFilterDate||today();
+normalizeOfficeSerials();
 const rows=db.officeEntries.filter(x=>x.date===selectedDate).sort((a,b)=>Number(b.serial||0)-Number(a.serial||0));
 const mats=db.settings.materials||[];
 const materialOptions=mats.map(x=>'<option>'+esc(x)+'</option>').join('');
@@ -268,7 +280,7 @@ const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+dmy(x.date)+'</
 document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+header('👷 Office Entry','Office staff के लिए सरल entry screen','')
 +'<div class="notice"><b>Office Login:</b> यहाँ Office Entry और भराव दोनों की entry की जा सकती है। Save होने के बाद यही data Main Login के Bharav section में तुरंत दिखाई देगा।</div>'
 +'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
-+field('Serial Number','officeSerial','number',officeNextSerial(),'','readonly')
++field('Serial Number','officeSerial','number',officeNextSerial(selectedDate),'','readonly')
 +field('Date','officeDate','date',selectedDate,'','required')
 +field('Time','officeTime','time',currentTime(),'','required')
 +field('Customer Name','officeCustomer','text','','','required autocomplete="off"')
@@ -297,7 +309,8 @@ if(missing.length){alert('ये Office Entry fields भरना जरूर�
 const weight=normalizeWeight(rawWeight);
 if(weight===null){alert('Weight सही डालें। उदाहरण: 9 या 9000 या 12.530');form.elements.officeWeight?.focus();return;}
 db.officeEntries??=[];
-const serial=officeNextSerial();
+normalizeOfficeSerials();
+const serial=officeNextSerial(date);
 db.officeEntries.push({date,time,serial,customer,place,vehicle,material,weight,naka,status:'pending',_id:'office_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
 if(customer&&!db.customers.some(c=>String(c.name||'').trim().toLowerCase()===customer.toLowerCase()))db.customers.push({name:customer,mobile:'',created:date});
 save();window.officeFilterDate=date;toast('Office entry save हो गई — Main Entry में complete होगी');officeEntry();
