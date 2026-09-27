@@ -361,7 +361,7 @@ function officeNextSerial(date){
 }
 function currentTime(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 let officePage=sessionStorage.getItem("chamunda_office_page")||"entry";
-async async function sendOfficeDayWhatsApp(date){
+async function sendOfficeDayWhatsApp(date){
   try{
     const rows=(db.officeEntries||[]).filter(x=>x.date===date).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
     if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return}
@@ -402,15 +402,29 @@ async async function sendOfficeDayWhatsApp(date){
     });
 
     if(y>165){doc.addPage();y=18}
-    y+=8;doc.setFontSize(13);doc.text("Royalty Summary",14,y);y+=7;doc.setFontSize(10);
-    doc.text("Naka वाली entries का Weight: "+num(weightSum)+" MT",14,y);y+=6;
-    doc.text("Royalty Weight: Round("+num(weightSum)+") × 51 = "+num(royaltyWeight),14,y);y+=6;
-    doc.text("Naka जोड़: "+num(nakaSum)+" × 51 = "+num(nakaRoyalty),14,y);y+=6;
-    doc.text("Royalty Difference: "+num(difference),14,y);y+=10;
+    y+=7;
+    doc.setFontSize(13);doc.text("Daily Summary",14,y);y+=7;
 
-    doc.setFontSize(13);doc.text("भराव Summary",14,y);y+=7;doc.setFontSize(10);
-    doc.text("Bharav - "+num(bharavCash)+" tractor cash, "+num(bharavUdhar)+" tractor udhar (total "+num(bharavTrips)+" tractor)",14,y);y+=6;
-    doc.text("कुल भराव Amount: ₹"+Number(bharavAmount||0).toLocaleString("en-IN",{maximumFractionDigits:2}),14,y);y+=10;
+    // One compact table at the bottom for Bharav + Royalty/Naka totals.
+    const summaryX=14, summaryY=y, summaryWidths=[72,72,72,72];
+    const summaryHeaders=["भराव Total","Royalty","Naka","Difference"];
+    const summaryValues=[
+      num(bharavTrips)+" Tractor",
+      "₹"+Number(royaltyWeight||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
+      "₹"+Number(nakaRoyalty||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
+      "₹"+Number(difference||0).toLocaleString("en-IN",{maximumFractionDigits:2})
+    ];
+    doc.setFontSize(9);
+    let sx=summaryX;
+    summaryHeaders.forEach((h,i)=>{doc.rect(sx,summaryY,summaryWidths[i],8);doc.text(h,sx+2,summaryY+5);sx+=summaryWidths[i]});
+    sx=summaryX;
+    summaryValues.forEach((v,i)=>{doc.rect(sx,summaryY+8,summaryWidths[i],9);doc.text(String(v),sx+2,summaryY+14);sx+=summaryWidths[i]});
+    y=summaryY+24;
+
+    doc.setFontSize(9);
+    doc.text("भराव Amount: ₹"+Number(bharavAmount||0).toLocaleString("en-IN",{maximumFractionDigits:2})+"  |  Cash: "+num(bharavCash)+" Tractor  |  Udhar: "+num(bharavUdhar)+" Tractor",14,y);y+=7;
+    doc.text("Naka वाली entries का Weight: "+num(weightSum)+" MT  |  Royalty = Round("+num(weightSum)+") × 51",14,y);y+=7;
+    doc.text("Naka जोड़ = "+num(nakaSum)+" × 51  |  Royalty Difference = Royalty − Naka",14,y);y+=9;
     doc.setFontSize(13);doc.text("Naka / Royalty Detail",14,y);y+=7;doc.setFontSize(10);
     doc.text("Naka वाली Entries: "+nakaRows.length,14,y);y+=6;
     doc.text("Naka: "+num(nakaRoyalty),14,y);y+=6;
