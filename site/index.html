@@ -373,7 +373,71 @@ function goOffice(p){
   sessionStorage.setItem("chamunda_office_page",officePage);
   render();
 }
-async function sendOfficeDayWhatsApp(date){try{const rows=(db.officeEntries||[]).filter(x=>x.date===date).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return}if(!window.jspdf){await new Promise((resolve,reject)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc)})}const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});doc.setFontSize(16);doc.text("Chamunda ERP - Office Daily Entry",14,14);doc.setFontSize(10);doc.text("Date: "+dmy(date),14,21);let y=29,x=10;const headers=["S.No","Time","Customer","Place","Vehicle","Material","Weight/Tractor","Naka","RST"],widths=[12,20,38,35,22,28,28,22,20];doc.setFontSize(8);headers.forEach((h,i)=>{doc.rect(x,y,widths[i],7);doc.text(String(h),x+1,y+4.5);x+=widths[i]});y+=7;rows.forEach(r=>{x=10;const vals=[r.serial,displayTime12(r.time),r.customer,r.place,r.vehicle||"",r.material,r.vehicleType==="Tractor"?(String(r.tractorCount||0)+" Tractor"):(num(r.weight)+" MT"),r.naka||"",r.rst||r.ratNo||""];vals.forEach((v,i)=>{let t=String(v??"");if(t.length>28)t=t.slice(0,27)+"…";doc.rect(x,y,widths[i],7);doc.text(t,x+1,y+4.5);x+=widths[i]});y+=7;if(y>190){doc.addPage();y=15}});const blob=doc.output("blob"),file=new File([blob],"office-entry-"+String(date).replace(/[^0-9-]/g,"")+".pdf",{type:"application/pdf"});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:"Chamunda ERP Office Entry",text:"Office Entry PDF - "+dmy(date),files:[file]})}else{const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);window.open("https://wa.me/?text="+encodeURIComponent("Chamunda ERP Office Entry - "+dmy(date)),"_blank")}}catch(e){if(e?.name!=="AbortError")alert("PDF/WhatsApp share नहीं हो पाया। कृपया दोबारा कोशिश करें।")}}
+async async function sendOfficeDayWhatsApp(date){
+  try{
+    const rows=(db.officeEntries||[]).filter(x=>x.date===date).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
+    if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return}
+    if(!window.jspdf){
+      await new Promise((resolve,reject)=>{
+        const sc=document.createElement("script");
+        sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+        sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc)
+      })
+    }
+    const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    const nakaRows=rows.filter(r=>{const s=String(r.naka??"").trim().replace(/,/g,"");return s!==""&&s!=="-"&&s!=="—"&&normalizeWeight(s)!==null});
+    const weightSum=nakaRows.reduce((a,r)=>a+(Number(r.weight)||0),0);
+    const royaltyWeight=Math.round(weightSum)*51;
+    const nakaSum=nakaRows.reduce((a,r)=>a+(normalizeWeight(r.naka)||0),0);
+    const nakaRoyalty=nakaSum*51;
+    const difference=royaltyWeight-nakaRoyalty;
+    const bharavRows=(db.bharav||[]).filter(x=>String(x.date||"").slice(0,10)===date);
+    const bharavTrips=bharavRows.reduce((a,x)=>a+(Number(x.tractors)||0),0);
+    const bharavAmount=bharavRows.reduce((a,x)=>a+(Number(x.amount)||0),0);
+
+    doc.setFontSize(16);doc.text("Chamunda ERP - Office Daily Report",14,14);
+    doc.setFontSize(10);doc.text("Date: "+dmy(date),14,21);
+    let y=29,x=10;
+    const headers=["S.No","Time","Customer","Place","Vehicle","Material","Weight/Tractor","Naka","RST"];
+    const widths=[12,20,38,35,22,28,28,22,20];
+    doc.setFontSize(8);
+    headers.forEach((h,i)=>{doc.rect(x,y,widths[i],7);doc.text(String(h),x+1,y+4.5);x+=widths[i]});
+    y+=7;
+    rows.forEach(r=>{
+      if(y>185){doc.addPage();y=15}
+      x=10;
+      const vals=[r.serial,displayTime12(r.time),r.customer,r.place,r.vehicle||"",r.material,r.vehicleType==="Tractor"?(String(r.tractorCount||0)+" Tractor"):(num(r.weight)+" MT"),r.naka||"",r.rst||r.ratNo||""];
+      vals.forEach((v,i)=>{let t=String(v??"");if(t.length>28)t=t.slice(0,27)+"…";doc.rect(x,y,widths[i],7);doc.text(t,x+1,y+4.5);x+=widths[i]});
+      y+=7
+    });
+
+    if(y>165){doc.addPage();y=18}
+    y+=8;doc.setFontSize(13);doc.text("Royalty Summary",14,y);y+=7;doc.setFontSize(10);
+    doc.text("Naka वाली entries का Weight: "+num(weightSum)+" MT",14,y);y+=6;
+    doc.text("Royalty Weight: Round("+num(weightSum)+") × 51 = "+num(royaltyWeight),14,y);y+=6;
+    doc.text("Naka जोड़: "+num(nakaSum)+" × 51 = "+num(nakaRoyalty),14,y);y+=6;
+    doc.text("Royalty Difference: "+num(difference),14,y);y+=10;
+
+    doc.setFontSize(13);doc.text("भराव Summary",14,y);y+=7;doc.setFontSize(10);
+    doc.text("कुल भराव Entries: "+bharavRows.length,14,y);y+=6;
+    doc.text("कुल Tractor / Trip: "+num(bharavTrips),14,y);y+=6;
+    doc.text("कुल भराव Amount: ₹"+Number(bharavAmount||0).toLocaleString("en-IN",{maximumFractionDigits:2}),14,y);
+    if(bharavRows.length){
+      y+=9;doc.setFontSize(8);doc.text("Date-wise भराव:",14,y);y+=5;
+      bharavRows.slice(0,10).forEach(r=>{doc.text((r.name||"Cash")+" | "+(r.tractors||0)+" Trip | ₹"+Number(r.amount||0).toLocaleString("en-IN",{maximumFractionDigits:2})+" | "+(r.payment||""),14,y);y+=5})
+    }
+
+    const blob=doc.output("blob");
+    const file=new File([blob],"chamunda-office-report-"+String(date).replace(/[^0-9-]/g,"")+".pdf",{type:"application/pdf"});
+    const msg="Chamunda ERP Office Daily Report - "+dmy(date)+"\nEntries: "+rows.length+"\nRoyalty: ₹"+Number(royaltyWeight||0).toLocaleString("en-IN")+" | Naka × 51: ₹"+Number(nakaRoyalty||0).toLocaleString("en-IN")+"\nभराव: "+bharavTrips+" Trip | ₹"+Number(bharavAmount||0).toLocaleString("en-IN");
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({title:"Chamunda ERP Daily Report",text:msg,files:[file]});
+    }else{
+      const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
+      window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank")
+    }
+  }catch(e){if(e?.name!=="AbortError")alert("PDF/WhatsApp share नहीं हो पाया। कृपया दोबारा कोशिश करें।")}
+}
 function officeEntry(){
 db.officeEntries??=[];
 const selectedDate=window.officeFilterDate||today();
