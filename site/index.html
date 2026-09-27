@@ -435,7 +435,7 @@ async function sendOfficeDayWhatsApp(date){
 
     const blob=doc.output("blob");
     const file=new File([blob],"chamunda-office-report-"+String(date).replace(/[^0-9-]/g,"")+".pdf",{type:"application/pdf"});
-    const msg="Chamunda ERP Office Daily Report - "+dmy(date)+"\nEntries: "+rows.length+"\nRoyalty: ₹"+Number(royaltyWeight||0).toLocaleString("en-IN")+" | Naka × 51: ₹"+Number(nakaRoyalty||0).toLocaleString("en-IN")+"\nभराव: "+bharavTrips+" Trip | ₹"+Number(bharavAmount||0).toLocaleString("en-IN");
+    const msg="*Chamunda ERP*\\n*"+dmy(date)+"*\\n\\n🚜 *Bharav* - "+bharavCash+" tractor cash, "+bharavUdhar+" tractor udhar (total "+bharavTrips+" tractor)\\n💰 *Royalty* - ₹"+Number(royaltyWeight||0).toLocaleString("en-IN")+"\\n📋 *Naka* - ₹"+Number(nakaRoyalty||0).toLocaleString("en-IN")+"\\n➖ *Difference* - ₹"+Number(difference||0).toLocaleString("en-IN");
     if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
       await navigator.share({title:"Chamunda ERP Daily Report",text:msg,files:[file]});
     }else{
