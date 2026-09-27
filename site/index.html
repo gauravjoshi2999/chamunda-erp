@@ -727,7 +727,7 @@ function bootERP(){
   }
   if(window.firebase&&db.settings?.cloudSync?.enabled)setTimeout(()=>initCloud(),50);
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootERP,{once:true});else bootERP();
+bootERP();
 window.addEventListener('load',()=>setTimeout(()=>{if(db.settings?.cloudSync?.enabled&&!cloudReady)initCloud()},50),{once:true});
 </script>
 </body></html>
