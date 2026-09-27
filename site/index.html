@@ -15,7 +15,10 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 @media(max-width:470px){.grid{grid-template-columns:1fr}.span2{grid-column:span 1}.cards{grid-template-columns:1fr 1fr}.reportgrid{grid-template-columns:1fr 1fr}.btn{width:auto}}
 .customer-scroll{max-height:65vh;overflow:auto;max-height:62vh;overflow:auto}.customer-scroll table{min-width:720px}
 @media print{.side,.actions,.no-print,.install{display:none!important}.main{margin:0;width:100%;padding:0}.panel{box-shadow:none;border:0}.top{margin-bottom:8px}.tablewrap{overflow:visible}table{min-width:0;width:100%}th,td{font-size:11px;padding:6px 5px}body{background:#fff}.reportbox{border:1px solid #ddd}}
-</style>
+<style>
+.login-shell{max-width:560px;margin:28px auto;padding:18px 14px 40px}
+.login-brand{text-align:center;margin-bottom:26px}.login-logo{width:64px;height:64px;margin:0 auto 10px;border-radius:20px;background:#14202c;color:#fff;display:grid;place-items:center;font-size:31px;box-shadow:0 10px 28px #0002}.login-brand h1{margin:0;font-size:28px}.login-brand p{margin:5px 0;color:#64748b}.login-heading{font-size:24px;font-weight:800;margin-bottom:5px}.login-subtitle{color:#64748b;margin-bottom:16px}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.profile-card{position:relative;text-align:left;border:1px solid #dbe3ea;background:#fff;border-radius:20px;padding:20px 16px;min-height:205px;box-shadow:0 8px 25px #00000012;transition:.18s}.profile-card:active{transform:scale(.98)}.profile-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px #0002}.avatar{width:72px;height:72px;border-radius:22px;display:grid;place-items:center;font-size:40px;margin-bottom:16px}.avatar-main{background:#e8f0ff}.avatar-office{background:#fff1df}.profile-title{font-size:20px;font-weight:800;color:#17212b}.profile-desc{font-size:13px;color:#64748b;margin-top:5px}.profile-arrow{position:absolute;right:15px;bottom:15px;font-size:23px;font-weight:800;color:#64748b}.login-footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:20px}.back-login{border:0;background:transparent;color:#315f96;font-weight:700;padding:7px 0;margin-bottom:14px}.login-card{background:#fff;border:1px solid #dbe3ea;border-radius:18px;padding:20px;box-shadow:0 8px 25px #00000010}.office-login-avatar{text-align:center;font-size:48px;margin-bottom:8px}@media(max-width:520px){.login-shell{margin:15px auto;padding:12px}.profile-grid{grid-template-columns:1fr 1fr;gap:10px}.profile-card{min-height:185px;padding:16px 12px}.avatar{width:60px;height:60px;font-size:34px}}
+</style></style>
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"></script>
@@ -27,12 +30,48 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
   <div class="brand">CHAMUNDA ERP<small>Crusher / Gitti Management</small></div>
   <div class="nav" id="nav"></div>
 </aside>
-<main class="main" id="app"></main><div id="loginGate" style="display:none;max-width:520px;margin:40px auto;padding:24px"><div class="panel"><h2>🔐 Chamunda ERP Login</h2><div class="notice">यह ERP केवल authorized user के लिए है।</div><div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="username" placeholder="Login email"></div><div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></div><button class="btn primary" style="margin-top:12px;width:100%" onclick="erpLogin('admin')">🔐 Login</button><button class="btn" style="margin-top:10px;width:100%" onclick="showOfficeLogin()">👷 Office Login</button><p class="muted" id="loginStatus"></p></div></div><div id="officeLoginGate" style="display:none;max-width:520px;margin:40px auto;padding:24px"><div class="panel"><h2>👷 Office Login</h2><div class="notice">Username <b>admin</b> और Password <b>123</b> से Office Entry खुलेगी।</div><div class="field"><label>Username</label><input id="officeLoginEmail" type="text" value="admin" autocomplete="username" placeholder="Username"></div><div class="field"><label>Password</label><input id="officeLoginPassword" type="password" value="123" autocomplete="current-password" placeholder="Password"></div><button class="btn green" style="margin-top:12px;width:100%" onclick="erpLogin('office')">👷 Office Login</button><button class="btn" style="margin-top:10px;width:100%" onclick="showLogin()">← Main Login</button><p class="muted" id="officeLoginStatus"></p></div></div>
+<main class="main" id="app"></main>
+<div id="loginGate" style="display:none">
+  <div class="login-shell">
+    <div class="login-brand"><div class="login-logo">⚙️</div><h1>Chamunda ERP</h1><p>Crusher / Gitti Management</p></div>
+    <div id="loginChooser">
+      <div class="login-heading">Welcome back</div><div class="login-subtitle">Login करने के लिए अपना profile चुनें</div>
+      <div class="profile-grid">
+        <button type="button" class="profile-card main-profile" onclick="showAdminLogin()"><div class="avatar avatar-main">👨‍💼</div><div class="profile-title">Main Login</div><div class="profile-desc">Admin / Main Dashboard</div><div class="profile-arrow">→</div></button>
+        <button type="button" class="profile-card office-profile" onclick="showOfficeLogin()"><div class="avatar avatar-office">👷</div><div class="profile-title">Office Login</div><div class="profile-desc">Entry / Bharav / Diesel</div><div class="profile-arrow">→</div></button>
+      </div>
+      <div class="login-footer">🔒 Secure access • Chamunda ERP</div>
+    </div>
+    <div id="adminLoginForm" style="display:none">
+      <button type="button" class="back-login" onclick="showLogin()">← Profiles पर वापस जाएँ</button>
+      <div class="login-heading">Main Login</div><div class="login-subtitle">Admin / Main Dashboard में प्रवेश करें</div>
+      <div class="login-card">
+        <div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="username" placeholder="Login email"></div>
+        <div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></div>
+        <button class="btn primary" style="margin-top:12px;width:100%" onclick="erpLogin('admin')">🔐 Login</button><p class="muted" id="loginStatus"></p>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="officeLoginGate" style="display:none">
+  <div class="login-shell">
+    <div class="login-brand"><div class="login-logo">⚙️</div><h1>Chamunda ERP</h1><p>Crusher / Gitti Management</p></div>
+    <button type="button" class="back-login" onclick="showLogin()">← Profiles पर वापस जाएँ</button>
+    <div class="login-heading">Office Login</div><div class="login-subtitle">Office staff के लिए login करें</div>
+    <div class="login-card">
+      <div class="office-login-avatar">👷</div>
+      <div class="notice">Username <b>admin</b> और Password <b>123</b> से Office Entry खुलेगी।</div>
+      <div class="field"><label>Username</label><input id="officeLoginEmail" type="text" value="admin" autocomplete="username" placeholder="Username"></div>
+      <div class="field"><label>Password</label><input id="officeLoginPassword" type="password" value="123" autocomplete="current-password" placeholder="Password"></div>
+      <button class="btn green" style="margin-top:12px;width:100%" onclick="erpLogin('office')">👷 Office Login</button><p class="muted" id="officeLoginStatus"></p>
+    </div>
+  </div>
+</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
 const KEY="chamunda_erp_v1";
-const ERP_VERSION="V23";
+const ERP_VERSION="V24";
 const FINAL_CUSTOMER_DELETE_V17=true;
 // Chamunda ERP Firebase Live Sync (Firebase Web App config)
 const BUILTIN_FIREBASE_CONFIG={
@@ -62,7 +101,16 @@ function readInput(id,fallback=''){
   const el=document.getElementById(id);
   return el ? String(el.value ?? '').trim() : fallback;
 }
-function showLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='block';if(o)o.style.display='none';if(a)a.style.display='none';}
+function showLogin(){
+ const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');
+ if(g)g.style.display='block'; if(o)o.style.display='none'; if(a)a.style.display='none';
+ const c=document.getElementById('loginChooser'),ad=document.getElementById('adminLoginForm'); if(c)c.style.display='block'; if(ad)ad.style.display='none';
+}
+function showAdminLogin(){
+ const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');
+ if(g)g.style.display='block'; if(o)o.style.display='none'; if(a)a.style.display='none';
+ const c=document.getElementById('loginChooser'),ad=document.getElementById('adminLoginForm'); if(c)c.style.display='none'; if(ad)ad.style.display='block';
+}
 function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='block';if(a)a.style.display='none';}
 function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';}
 function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';sessionStorage.setItem("chamunda_erp_login_mode","office");officePage='entry';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';sessionStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
