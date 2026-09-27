@@ -17,7 +17,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:
 @media print{.side,.actions,.no-print,.install{display:none!important}.main{margin:0;width:100%;padding:0}.panel{box-shadow:none;border:0}.top{margin-bottom:8px}.tablewrap{overflow:visible}table{min-width:0;width:100%}th,td{font-size:11px;padding:6px 5px}body{background:#fff}.reportbox{border:1px solid #ddd}}
 <style>
 .login-shell{max-width:560px;margin:28px auto;padding:18px 14px 40px}
-.login-brand{text-align:center;margin-bottom:26px}.login-logo{width:64px;height:64px;margin:0 auto 10px;border-radius:20px;background:#14202c;color:#fff;display:grid;place-items:center;font-size:31px;box-shadow:0 10px 28px #0002}.login-brand h1{margin:0;font-size:28px}.login-brand p{margin:5px 0;color:#64748b}.login-heading{font-size:24px;font-weight:800;margin-bottom:5px}.login-subtitle{color:#64748b;margin-bottom:16px}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.profile-card{position:relative;text-align:left;border:1px solid #dbe3ea;background:#fff;border-radius:20px;padding:20px 16px;min-height:205px;box-shadow:0 8px 25px #00000012;transition:.18s}.profile-card:active{transform:scale(.98)}.profile-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px #0002}.avatar{width:72px;height:72px;border-radius:22px;display:grid;place-items:center;font-size:40px;margin-bottom:16px}.avatar-main{background:#e8f0ff}.avatar-office{background:#fff1df}.profile-title{font-size:20px;font-weight:800;color:#17212b}.profile-desc{font-size:13px;color:#64748b;margin-top:5px}.profile-arrow{position:absolute;right:15px;bottom:15px;font-size:23px;font-weight:800;color:#64748b}.login-footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:20px}.back-login{border:0;background:transparent;color:#315f96;font-weight:700;padding:7px 0;margin-bottom:14px}.login-card{background:#fff;border:1px solid #dbe3ea;border-radius:18px;padding:20px;box-shadow:0 8px 25px #00000010}.office-login-avatar{text-align:center;font-size:48px;margin-bottom:8px}@media(max-width:520px){.login-shell{margin:15px auto;padding:12px}.profile-grid{grid-template-columns:1fr 1fr;gap:10px}.profile-card{min-height:185px;padding:16px 12px}.avatar{width:60px;height:60px;font-size:34px}}
+.login-brand{text-align:center;margin-bottom:26px}.login-logo{width:64px;height:64px;margin:0 auto 10px;border-radius:20px;background:#14202c;color:#fff;display:grid;place-items:center;font-size:31px;box-shadow:0 10px 28px #0002}.login-brand h1{margin:0;font-size:28px}.login-brand p{margin:5px 0;color:#64748b}.login-heading{font-size:24px;font-weight:800;margin-bottom:5px}.login-subtitle{color:#64748b;margin-bottom:16px}.login-shell{display:block!important;visibility:visible!important;opacity:1!important}.profile-grid{display:grid!important;visibility:visible!important;opacity:1!important}.profile-card{display:block!important;visibility:visible!important;opacity:1!important;cursor:pointer!important}.avatar{display:grid!important;visibility:visible!important;opacity:1!important}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.profile-card{position:relative;text-align:left;border:1px solid #dbe3ea;background:#fff;border-radius:20px;padding:20px 16px;min-height:205px;box-shadow:0 8px 25px #00000012;transition:.18s}.profile-card:active{transform:scale(.98)}.profile-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px #0002}.avatar{width:72px;height:72px;border-radius:22px;display:grid;place-items:center;font-size:40px;margin-bottom:16px}.avatar-main{background:#e8f0ff}.avatar-office{background:#fff1df}.profile-title{font-size:20px;font-weight:800;color:#17212b}.profile-desc{font-size:13px;color:#64748b;margin-top:5px}.profile-arrow{position:absolute;right:15px;bottom:15px;font-size:23px;font-weight:800;color:#64748b}.login-footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:20px}.back-login{border:0;background:transparent;color:#315f96;font-weight:700;padding:7px 0;margin-bottom:14px}.login-card{background:#fff;border:1px solid #dbe3ea;border-radius:18px;padding:20px;box-shadow:0 8px 25px #00000010}.office-login-avatar{text-align:center;font-size:48px;margin-bottom:8px}@media(max-width:520px){.login-shell{margin:15px auto;padding:12px}.profile-grid{grid-template-columns:1fr 1fr;gap:10px}.profile-card{min-height:185px;padding:16px 12px}.avatar{width:60px;height:60px;font-size:34px}}
 </style></style>
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
@@ -132,7 +132,15 @@ function ensureFirebaseApp(c){
   try{return firebase.app();}
   catch(e){return firebase.initializeApp(c);}
 }
-function initCloud(){if(cloudInitInProgress)return cloudReady;cloudInitInProgress=true;try{const c=getCloudConfig();if(!c||!c.apiKey||!c.projectId||!c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}if(!window.firebase||!firebase.database||!firebase.auth){cloudStatus('⚠ Firebase SDK load नहीं हुआ');return false;}if(cloudUnsub){try{cloudUnsub();}catch(e){}cloudUnsub=null;}cloudApp=ensureFirebaseApp(c);const path='chamundaERP/data';const startDb=()=>{cloudRef=firebase.database().ref(path);cloudReady=false;cloudStatus('● Connecting...',true);const handleValue=snap=>{try{if(!snap||typeof snap.val!=='function')throw new Error('Cloud snapshot नहीं मिला');const remote=snap.val();if(remote&&remote.sales){if(cloudWriting)return;cloudWriting=true;const before=JSON.stringify(remote);db=remote;migrate();const changed=JSON.stringify(db)!==before;localStorage.setItem(KEY,JSON.stringify(db));cloudWriting=false;cloudReady=true;if(changed)setTimeout(()=>cloudPush(),50);cloudStatus('● Live Sync चालू',true);if(page==='settings')settings();else render();}else{cloudReady=true;cloudStatus('● Cloud connected — अभी data नहीं है',true);if(db.sales?.length||db.customers?.length)scheduleCloudPush();}}catch(e){cloudWriting=false;cloudReady=false;cloudStatus('⚠ Cloud data error: '+(e.message||e));}};cloudUnsub=cloudRef.on('value',handleValue,err=>{cloudReady=false;cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));});};if(firebase.auth().currentUser){authUser=firebase.auth().currentUser;userMode=sessionStorage.getItem("chamunda_erp_login_mode")||"admin";startDb();return true;}showLogin();return false;}catch(e){cloudReady=false;cloudStatus('⚠ Setup error: '+(e.message||e));return false;}finally{cloudInitInProgress=false;}}
+function initCloud(){if(cloudInitInProgress)return cloudReady;cloudInitInProgress=true;try{const c=getCloudConfig();if(!c||!c.apiKey||!c.projectId||!c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}if(!window.firebase||!firebase.database||!firebase.auth){cloudStatus('⚠ Firebase SDK load नहीं हुआ');return false;}if(cloudUnsub){try{cloudUnsub();}catch(e){}cloudUnsub=null;}cloudApp=ensureFirebaseApp(c);const path='chamundaERP/data';const startDb=()=>{cloudRef=firebase.database().ref(path);cloudReady=false;cloudStatus('● Connecting...',true);const handleValue=snap=>{try{if(!snap||typeof snap.val!=='function')throw new Error('Cloud snapshot नहीं मिला');const remote=snap.val();if(remote&&remote.sales){if(cloudWriting)return;cloudWriting=true;const before=JSON.stringify(remote);db=remote;migrate();const changed=JSON.stringify(db)!==before;localStorage.setItem(KEY,JSON.stringify(db));cloudWriting=false;cloudReady=true;if(changed)setTimeout(()=>cloudPush(),50);cloudStatus('● Live Sync चालू',true);if(page==='settings')settings();else render();}else{cloudReady=true;cloudStatus('● Cloud connected — अभी data नहीं है',true);if(db.sales?.length||db.customers?.length)scheduleCloudPush();}}catch(e){cloudWriting=false;cloudReady=false;cloudStatus('⚠ Cloud data error: '+(e.message||e));}};cloudUnsub=cloudRef.on('value',handleValue,err=>{cloudReady=false;cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));});};const savedMode=sessionStorage.getItem("chamunda_erp_login_mode");
+if(firebase.auth().currentUser&&savedMode){
+  authUser=firebase.auth().currentUser;userMode=savedMode;startDb();return true;
+}
+if(!savedMode){
+  try{firebase.auth().signOut().catch(()=>{});}catch(e){}
+  authUser=null;userMode='admin';showLogin();return false;
+}
+showLogin();return false;}catch(e){cloudReady=false;cloudStatus('⚠ Setup error: '+(e.message||e));return false;}finally{cloudInitInProgress=false;}}
 function cloudPush(){
   if(!cloudRef||cloudWriting||!cloudReady)return;
   const payload=JSON.parse(JSON.stringify(db));
@@ -211,22 +219,22 @@ function render(){nav();({dashboard:dash,sale,sale:bla,bharav,royalty,diesel,rep
 // explicit dispatcher avoids shorthand ambiguity
 let officePage=sessionStorage.getItem("chamunda_office_page")||"entry";
 function officeNav(){
-  const n=document.getElementById('officeNav');
-  if(!n)return;
+  const n=document.getElementById('officeNav'); if(!n)return;
   n.innerHTML='';
-  n.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding:8px;background:#14202c;border-radius:12px;min-height:56px;align-items:center;';
-  const add=(label,key,fn)=>{
+  const items=[
+    ['📝 Entry','entry',()=>officeEntry()],
+    ['🚜 भराव','bharav',()=>officeBharav()],
+    ['⛽ Diesel','diesel',()=>officeDiesel()],
+    ['🚪 Logout','logout',()=>erpLogout()]
+  ];
+  n.style.cssText='display:flex!important;gap:8px!important;flex-wrap:wrap!important;margin:0 0 14px!important;padding:8px!important;background:#14202c!important;border-radius:12px!important;min-height:56px!important;align-items:center!important;position:relative!important;z-index:20!important;';
+  items.forEach(([label,key,fn])=>{
     const btn=document.createElement('button');
-    btn.type='button';
-    btn.textContent=label;
-    btn.style.cssText='display:inline-block!important;visibility:visible!important;opacity:1!important;border:0!important;background:'+(officePage===key?'#2a3a4a':'#203142')+'!important;color:#ffffff!important;border-radius:9px!important;padding:10px 14px!important;font-weight:700!important;font-size:14px!important;min-height:40px!important;';
-    btn.onclick=()=>{officePage=key;sessionStorage.setItem('chamunda_office_page',key);fn();};
+    btn.type='button'; btn.textContent=label;
+    btn.style.cssText='display:block!important;visibility:visible!important;opacity:1!important;cursor:pointer!important;border:0!important;background:'+(officePage===key?'#315f96':'#203142')+'!important;color:#fff!important;border-radius:9px!important;padding:11px 15px!important;font-weight:800!important;font-size:14px!important;min-height:42px!important;';
+    btn.addEventListener('click',()=>{officePage=key;sessionStorage.setItem('chamunda_office_page',key);fn();});
     n.appendChild(btn);
-  };
-  add('📝 Entry','entry',officeEntry);
-  add('🚜 भराव','bharav',()=>officeBharav());
-  add('⛽ Diesel','diesel',officeDiesel);
-  add('🚪 Logout','logout',erpLogout);
+  });
 }
 function render(){if(userMode==='office'){if(officePage==='bharav')officeBharav();else if(officePage==='diesel')officeDiesel();else officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
