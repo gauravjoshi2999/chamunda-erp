@@ -102,17 +102,17 @@ function readInput(id,fallback=''){
   return el ? String(el.value ?? '').trim() : fallback;
 }
 function showLogin(){
- const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');
- if(g)g.style.display='block'; if(o)o.style.display='none'; if(a)a.style.display='none';
+ const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');
+ if(g)g.style.display='block'; if(o)o.style.display='none'; if(a)a.style.display='none'; if(s)s.style.display='none';
  const c=document.getElementById('loginChooser'),ad=document.getElementById('adminLoginForm'); if(c)c.style.display='block'; if(ad)ad.style.display='none';
 }
 function showAdminLogin(){
- const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');
- if(g)g.style.display='block'; if(o)o.style.display='none'; if(a)a.style.display='none';
+ const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');
+ if(g)g.style.display='block'; if(o)o.style.display='none'; if(a)a.style.display='none'; if(s)s.style.display='none';
  const c=document.getElementById('loginChooser'),ad=document.getElementById('adminLoginForm'); if(c)c.style.display='none'; if(ad)ad.style.display='block';
 }
-function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='block';if(a)a.style.display='none';}
-function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';}
+function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='block';if(a)a.style.display='none';if(s)s.style.display='none';}
+function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';if(s)s.style.display=userMode==='office'?'none':'';}
 function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';sessionStorage.setItem("chamunda_erp_login_mode","office");officePage='entry';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';sessionStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
 function erpLogout(){
   try{clearTimeout(cloudPushTimer);}catch(e){}
@@ -236,7 +236,19 @@ function officeNav(){
     n.appendChild(btn);
   });
 }
-function render(){if(userMode==='office'){if(officePage==='bharav')officeBharav();else if(officePage==='diesel')officeDiesel();else officeEntry();return;}nav();if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup()}
+function render(){
+ const side=document.querySelector('.side');
+ if(userMode==='office'){
+   if(side)side.style.display='none';
+   if(officePage==='bharav')officeBharav();
+   else if(officePage==='diesel')officeDiesel();
+   else officeEntry();
+   return;
+ }
+ if(side)side.style.display='';
+ nav();
+ if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup();
+}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
 function normalizeWeight(raw){const s=String(raw??'').trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
 function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
