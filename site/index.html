@@ -334,12 +334,12 @@ document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"
 +field('Time','officeTime','time',currentTime(),'','required')
 +field('Customer Name','officeCustomer','text','','','required autocomplete="off"')
 +field('Place','officePlace','text','','','required')
-+field('Vehicle Number','officeVehicle','text','','','required')
 +'<div class="field"><label>Vehicle Type</label><select name="officeVehicleType" id="officeVehicleType" required><option value="Dumper">Dumper</option><option value="Tractor">Tractor</option></select></div>'
 +'<div class="field" id="officeTractorCountWrap" style="display:none"><label>कितने Tractor?</label><input name="officeTractorCount" id="officeTractorCount" type="number" min="1" step="1" placeholder="जैसे 2"></div>'
 +'<div class="field"><label>Material</label><select name="officeMaterial" id="officeMaterial" required>'+materialOptions+'</select></div>'
-+field('Weight (MT)','officeWeight','text','','','required inputmode="decimal" placeholder="जैसे 9 या 9000 या 12.530"')
-+field('Naka Parchi','officeNaka','text','','','required')
++field('Weight (MT)','officeWeight','text','','','inputmode="decimal" placeholder="Dumper के लिए वजन"')
++field('Vehicle Number','officeVehicle','text','','','placeholder="Dumper का vehicle number"')
++field('Naka Parchi','officeNaka','text','','','placeholder="Dumper की naka parchi"')
 +'</div><div class="actions"><button class="btn primary" type="submit">✓ Save Office Entry</button><button class="btn" type="button" onclick="officeEntry()">Clear</button></div></form></div>'
 +'<div class="panel"><div class="top"><div><h3 style="margin:0">Date-wise Office Entries</h3><div class="muted">'+dmy(selectedDate)+' की entries</div></div><input class="field search" style="min-height:42px" type="date" value="'+selectedDate+'" onchange="window.officeFilterDate=this.value;officeEntry()"></div>'
 +'<div class="tablewrap"><table><tr><th>Serial</th><th>Date</th><th>Time</th><th>Customer Name</th><th>Place</th><th>Vehicle Number</th><th>Material</th><th>Weight</th><th>Naka</th><th>Action</th></tr>'+ (tableRows||'<tr><td colspan="10" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>') +'</table></div></div>';
@@ -362,7 +362,7 @@ if(weight===null){alert('Weight सही डालें। उदाहरण:
 db.officeEntries??=[];
 normalizeOfficeSerials();
 const serial=officeNextSerial(date);
-if(vehicleType==='Tractor' && (!Number.isInteger(Number(tractorCount)) || Number(tractorCount)<1)){alert('कितने Tractor हैं, संख्या डालें।');return}db.officeEntries.push({date,time,serial,customer,place,vehicle,vehicleType,tractorCount:vehicleType==='Tractor'?Number(tractorCount):0,material,weight,naka,status:'pending',_id:'office_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
+db.officeEntries.push({date,time,serial,customer,place,vehicle:isTractor?'':vehicle,vehicleType,tractorCount:isTractor?Number(tractorCount):0,material,weight,naka:isTractor?'':naka,status:'pending',_id:'office_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
 if(customer&&!db.customers.some(c=>String(c.name||'').trim().toLowerCase()===customer.toLowerCase()))db.customers.push({name:customer,mobile:'',created:date});
 save();window.officeFilterDate=date;toast('Office entry save हो गई — Main Entry में complete होगी');officeEntry();
 }
