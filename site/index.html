@@ -71,7 +71,7 @@ input,select,textarea{max-width:100%}
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script></script>
 </head>
 <body>
 <div class="app">
@@ -719,7 +719,15 @@ function resetData(){if(confirm("सारा local data delete करना ह
 // Prevent an older cached UI from hiding newly added Office options.
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister()))).catch(()=>{}));
 if("caches" in window)window.addEventListener("load",()=>caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{}));
-if(db.settings?.cloudSync?.enabled) setTimeout(()=>initCloud(),200);
-render();
+function bootERP(){
+  try{hideLogin();render();}catch(e){
+    console.error('ERP boot error',e);
+    const app=document.getElementById('app');
+    if(app)app.innerHTML='<div class="panel"><h3>⚠️ ERP Load Error</h3><div class="notice">Software load करते समय समस्या आई। कृपया Refresh करें।</div><div class="muted">'+esc(e?.message||e)+'</div></div>';
+  }
+  if(window.firebase&&db.settings?.cloudSync?.enabled)setTimeout(()=>initCloud(),50);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootERP,{once:true});else bootERP();
+window.addEventListener('load',()=>setTimeout(()=>{if(db.settings?.cloudSync?.enabled&&!cloudReady)initCloud()},50),{once:true});
 </script>
 </body></html>
