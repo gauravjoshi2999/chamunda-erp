@@ -514,7 +514,7 @@ function officeBharav(d=today()){
     '<div class="notice"><b>भराव Rate:</b> ₹'+money(rate).replace('₹','')+' प्रति Trip.<br>'+
     (isSubmitted?'<b>🔒 '+dmy(selectedDate)+' की भराव entries Submit हो चुकी हैं। अब Office से Edit/Delete या नई entry नहीं की जा सकती।</b>':'<b>Save के बाद entry Edit/Delete कर सकते हैं। दिन की entries पूरी होने पर Submit करें।')+
     '</div>'+
-    '<div class="panel no-print"><div class="grid"><div class="field"><label>भराव की तारीख</label><input type="date" id="officeBharavViewDate" value="'+selectedDate+'"></div><div class="field" style="align-self:end"><button class="btn" onclick="officeBharav(document.getElementById(\'officeBharavViewDate\').value)">उस दिन की Entry देखें</button></div></div></div>'+
+    '<div class="panel no-print"><div class="grid"><div class="field"><label>भराव की तारीख</label><input type="date" id="officeBharavViewDate" value="'+selectedDate+'"></div><div class="field" style="align-self:end"><button class="btn primary" style="width:100%;font-weight:800" onclick="officeBharav(document.getElementById(\'officeBharavViewDate\').value)">🔎 उस दिन की Entry देखें</button></div></div></div>'+
     (isSubmitted?'':'<div class="panel"><h3>नई भराव Entry</h3><form id="officeBharavForm"><div class="grid">'+
     field('Date','date','date',selectedDate,'','required')+
     field('Dumper / Trip कितने?','tractors','number','','','required min="1" step="1"')+
