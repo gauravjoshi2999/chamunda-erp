@@ -18,7 +18,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Package source code\n        run: |\n          zip -qr /tmp/chamunda-erp-source.zip . -x ".git/*"\n\n      - name: Upload source code ZIP\n        uses: actions/upload-artifact@v4\n        with:\n          name: chamunda-erp-source\n          path: /tmp/chamunda-erp-source.zip\n          retention-days: 7\n\n      - name: JavaScript syntax check
+      - name: Package source code
+        run: |
+          zip -qr /tmp/chamunda-erp-source.zip . -x ".git/*"
+
+      - name: Upload source code ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: chamunda-erp-source
+          path: /tmp/chamunda-erp-source.zip
+          retention-days: 7
+
+      - name: JavaScript syntax check
         run: |
           python3 - <<'PY'
           import re
