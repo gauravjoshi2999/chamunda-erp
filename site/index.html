@@ -325,7 +325,7 @@ normalizeOfficeSerials();
 const rows=db.officeEntries.filter(x=>x.date===selectedDate).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
 const mats=db.settings.materials||[];
 const materialOptions=mats.map(x=>'<option>'+esc(x)+'</option>').join('');
-const daySubmitted=(db.settings.officeSubmittedDates||[]).includes(selectedDate);const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+dmy(x.date)+'</td><td>'+esc(x.time)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.place)+'</td><td>'+esc(x.vehicleType||'Dumper')+'</td><td>'+esc(x.vehicle||'')+'</td><td>'+esc(x.material)+'</td><td>'+(x.vehicleType==='Tractor'?esc(x.tractorCount||0)+' Tractor':num(x.weight)+' MT')+'</td><td>'+esc(x.naka||'')+'</td><td>'+(daySubmitted?'<span class="muted">🔒 Submitted</span>':'<button class="btn primary" data-id="'+esc(x._id)+'" onclick="editOfficeEntry(this.dataset.id)">Edit</button> <button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeEntry(this.dataset.id)">Delete</button>')+'</td></tr>').join('');
+const hasPending=rows.some(x=>x.status!=='submitted');const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+dmy(x.date)+'</td><td>'+esc(x.time)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.place)+'</td><td>'+esc(x.vehicleType||'Dumper')+'</td><td>'+esc(x.vehicle||'')+'</td><td>'+esc(x.material)+'</td><td>'+(x.vehicleType==='Tractor'?esc(x.tractorCount||0)+' Tractor':num(x.weight)+' MT')+'</td><td>'+esc(x.naka||'')+'</td><td>'+(x.status==='submitted'?'<span class="muted">🔒 Submitted</span>':'<button class="btn primary" data-id="'+esc(x._id)+'" onclick="editOfficeEntry(this.dataset.id)">Edit</button> <button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeEntry(this.dataset.id)">Delete</button>')+'</td></tr>').join('');
 document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+header('👷 Office Entry','Office staff के लिए सरल entry screen','')
 +'<div class="notice"><b>Office Login:</b> यहाँ Office Entry और भराव दोनों की entry की जा सकती है। Save होने के बाद यही data Main Login के Bharav section में तुरंत दिखाई देगा।</div>'
 +'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
@@ -341,7 +341,7 @@ document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"
 +'<div id="officeVehicleWrap">'+field('Vehicle Number','officeVehicle','text','','','placeholder="Dumper का vehicle number"')+'</div>'
 +'<div id="officeNakaWrap">'+field('Naka Parchi','officeNaka','text','','','placeholder="Dumper की naka parchi"')+'</div>'
 +'</div><div class="actions"><button class="btn primary" type="submit">✓ Save Office Entry</button><button class="btn" type="button" onclick="officeEntry()">Clear</button></div></form></div>'
-+'<div class="panel"><div class="top"><div><h3 style="margin:0">Date-wise Office Entries</h3><div class="muted">'+dmy(selectedDate)+' की entries '+(daySubmitted?'<b>🔒 आज की entry Submit हो चुकी है</b>':'')+'</div></div><input class="field search" style="min-height:42px" type="date" value="'+selectedDate+'" onchange="window.officeFilterDate=this.value;officeEntry()"></div>'
++'<div class="panel"><div class="top"><div><h3 style="margin:0">Date-wise Office Entries</h3><div class="muted">'+dmy(selectedDate)+' की entries '+(!hasPending&&rows.length?'<b>🔒 सभी entries Submit हो चुकी हैं</b>':'')+'</div></div><input class="field search" style="min-height:42px" type="date" value="'+selectedDate+'" onchange="window.officeFilterDate=this.value;officeEntry()"></div>'
 +'<div class="tablewrap"><table><tr><th>Serial</th><th>Date</th><th>Time</th><th>Customer Name</th><th>Place</th><th>Vehicle Type</th><th>Vehicle Number</th><th>Material</th><th>Weight / Tractor</th><th>Naka</th><th>Action</th></tr>'+ (tableRows||'<tr><td colspan="11" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>') +'</table></div>'
 +'<div class="actions" style="margin-top:12px;justify-content:flex-end">'+(daySubmitted?'<button class="btn" type="button" disabled>🔒 Day Submitted</button>':'<button class="btn green" type="button" onclick="submitOfficeDay(\''+selectedDate+'\')">✓ Submit Today\'s Entries</button>')+'</div></div>';
 officeNav();
@@ -351,7 +351,6 @@ function saveOfficeEntry(e){
 e.preventDefault();
 const form=e.currentTarget;
 const formDate=String(form?.elements?.officeDate?.value||today()).slice(0,10);
-if((db.settings.officeSubmittedDates||[]).includes(formDate)){alert('इस तारीख की Office entries Submit हो चुकी हैं। अब नई entry नहीं जोड़ी जा सकती।');return;}
 if(!form){alert('Office Entry form नहीं मिला।');return;}
 if(!form.reportValidity())return;
 const get=n=>String(form.elements[n]?.value??'').trim();
@@ -376,7 +375,7 @@ function completeOfficeEntry(id){const x=(db.officeEntries||[]).find(e=>e._id===
 function loadOfficeEntryIntoSale(x){const f=document.getElementById('saleForm');if(!f||!x)return;['date','customer','place','vehicle','vehicleType','tractorCount','material','weight','naka'].forEach(k=>{if(f.elements[k])f.elements[k].value=x[k]??''});const tw=document.getElementById('tractorCountWrap');if(tw)tw.style.display=f.elements.vehicleType?.value==='Tractor'?'block':'none';if(f.elements.date)f.elements.date.value=x.date||today();window.loadedOfficeId=x._id;toast('Office entry load हो गई — अब Rate और बाकी fields भरें')}
 function editOfficeEntry(id){
  const x=(db.officeEntries||[]).find(e=>e._id===id); if(!x)return;
- if((db.settings.officeSubmittedDates||[]).includes(String(x.date).slice(0,10))){alert('इस दिन की entries Submit हो चुकी हैं। अब Edit नहीं कर सकते।');return;}
+ if(x.status==='submitted'){alert('यह Office entry Submit हो चुकी है। अब Edit नहीं कर सकते।');return;}
  const mats=db.settings.materials||[];
  const modal=document.createElement('div'); modal.className='modal-backdrop';
  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:120;display:grid;place-items:center;padding:12px';
@@ -412,21 +411,18 @@ function editOfficeEntry(id){
 }
 function submitOfficeDay(date){
  const d=String(date||today()).slice(0,10);
- db.officeEntries??=[];db.settings??={};db.settings.officeSubmittedDates??=[];
- if(db.settings.officeSubmittedDates.includes(d)){alert('इस दिन की entries पहले ही Submit हो चुकी हैं।');return;}
- const entries=db.officeEntries.filter(x=>String(x.date||'').slice(0,10)===d);
- if(!entries.length){alert('इस दिन की कोई Office entry नहीं है।');return;}
- if(!confirm(dmy(d)+' की '+entries.length+' Office entries Submit करनी हैं? Submit के बाद इस दिन की entries Edit/Delete नहीं की जा सकेंगी।'))return;
+ db.officeEntries??=[];
+ const entries=db.officeEntries.filter(x=>String(x.date||'').slice(0,10)===d&&x.status!=='submitted');
+ if(!entries.length){alert('इस तारीख की कोई pending Office entry नहीं है।');return;}
+ if(!confirm(dmy(d)+' की '+entries.length+' pending entries Submit करनी हैं? Submit के बाद इन्हें Edit/Delete नहीं कर सकेंगे।'))return;
  normalizeOfficeSerials();
- db.settings.officeSubmittedDates.push(d);
- db.settings.officeSubmittedDates=[...new Set(db.settings.officeSubmittedDates)];
- entries.forEach(x=>x.status='submitted');
+ entries.forEach(x=>{x.status='submitted';x.submittedAt=new Date().toISOString()});
  save();
- toast(dmy(d)+' की Office entries Submit हो गईं 🔒');
+ toast(dmy(d)+' की pending entries Submit हो गईं 🔒');
  window.officeFilterDate=d;
  officeEntry();
 }
-function deleteOfficeEntry(id){if(!id)return;const x=(db.officeEntries||[]).find(e=>e._id===id);if(x&&(db.settings.officeSubmittedDates||[]).includes(String(x.date).slice(0,10))){alert('इस दिन की entries Submit हो चुकी हैं। अब Delete नहीं कर सकते।');return;}if(!confirm('यह Office entry delete करनी है?'))return;db.officeEntries=(db.officeEntries||[]).filter(x=>x._id!==id);save();toast('Office entry delete हो गई');officeEntry()}
+function deleteOfficeEntry(id){if(!id)return;const x=(db.officeEntries||[]).find(e=>e._id===id);if(x&&x.status==='submitted'){alert('यह Office entry Submit हो चुकी है। अब Delete नहीं कर सकते।');return;}if(!confirm('यह Office entry delete करनी है?'))return;db.officeEntries=(db.officeEntries||[]).filter(x=>x._id!==id);save();toast('Office entry delete हो गई');officeEntry()}
 function completeSaleFromOffice(sale,officeId){const x=(db.officeEntries||[]).find(e=>e._id===officeId);if(x){x.status='completed';x.completedAt=new Date().toISOString();x.saleSerial=sale.serial;save();}}
 function dash(){let t=totals(), b=db.bharav.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.tractors||0),0),ri=db.dieselIn.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.litres||0),0);document.getElementById("app").innerHTML=header("Office Dashboard","आज की entry के लिए आसान screen",`<button class="btn primary" onclick="go('sale')">+ नई Sale Entry</button>`)
 +`<div class="cards"><div class="card"><div class="label">आज की Sale Entries</div><div class="num">${t.entries}</div></div><div class="card"><div class="label">Total Weight</div><div class="num">${num(t.weight)} MT</div></div><div class="card"><div class="label">Total Sale</div><div class="num">${money(t.amount)}</div></div><div class="card"><div class="label">Cash</div><div class="num">${money(t.cash)}</div></div><div class="card"><div class="label">Udhar</div><div class="num">${money(t.udhar)}</div></div></div>`
