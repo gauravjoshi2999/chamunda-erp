@@ -238,14 +238,17 @@ function officeNav(){
 }
 function render(){
  const side=document.querySelector('.side');
+ const main=document.querySelector('.main');
  if(userMode==='office'){
    if(side)side.style.display='none';
+   if(main){main.style.marginLeft='0';main.style.width='100%';main.style.maxWidth='none';main.style.padding='14px';}
    if(officePage==='bharav')officeBharav();
    else if(officePage==='diesel')officeDiesel();
    else officeEntry();
    return;
  }
  if(side)side.style.display='';
+ if(main){main.style.marginLeft='235px';main.style.width='calc(100% - 235px)';main.style.maxWidth='1600px';main.style.padding='20px';}
  nav();
  if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup();
 }
