@@ -48,7 +48,7 @@ const dmy=d=>{if(!d)return "";let [y,m,dd]=String(d).slice(0,10).split("-");retu
 const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
 const num=n=>Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:3});
 let db=load();migrate();
-let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false;
+let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
 function blank(){return {sales:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["12 MM","6 MM","20 MM","Dust","M-Sand"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
 function migrate(){
@@ -69,16 +69,19 @@ function ensureFirebaseApp(c){
   return app;
 }
 function initCloud(){
+  if(cloudInitInProgress)return cloudReady;
+  cloudInitInProgress=true;
   try{
     const c=getCloudConfig();
     if(!c || !c.apiKey || !c.projectId || !c.databaseURL){cloudStatus('⚠ Firebase config अधूरी है');return false;}
     if(cloudUnsub){cloudUnsub();cloudUnsub=null;}
     cloudApp=ensureFirebaseApp(c);
     const path=(db.settings?.cloudSync?.path||'chamundaERP/data').trim()||'chamundaERP/data';
-    cloudRef=firebase.database(cloudApp).ref(path);
+    cloudRef=firebase.database().ref(path);
     cloudReady=false;
     cloudStatus('● Connecting...',true);
     cloudUnsub=cloudRef.on('value',snap=>{
+      if(!snap || typeof snap.val!=='function')throw new Error('Cloud snapshot नहीं मिला');
       const remote=snap.val();
       if(remote && remote.sales){
         if(cloudWriting) return;
@@ -103,7 +106,7 @@ function initCloud(){
       cloudStatus('⚠ Cloud error: '+(err.message||'check Rules'));
     });
     return true;
-  }catch(e){cloudReady=false;cloudStatus('⚠ Setup error: '+(e.message||e));return false;}
+  }catch(e){cloudReady=false;cloudStatus('⚠ Setup error: '+(e.message||e));return false;}finally{cloudInitInProgress=false;}
 }
 function cloudPush(){
   if(!cloudRef||cloudWriting||!cloudReady)return;
