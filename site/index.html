@@ -303,6 +303,19 @@ function officeNextSerial(date){
  return Math.max(0,...(db.officeEntries||[]).filter(x=>x.date===d).map(x=>Number(x.serial)||0))+1;
 }
 function currentTime(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+let officePage=sessionStorage.getItem("chamunda_office_page")||"entry";
+function officeNav(){
+  const el=document.getElementById("officeNav");
+  if(!el)return;
+  const items=[["entry","📝 Entry"],["bharav","🚜 भराव"],["diesel","⛽ Diesel"]];
+  el.innerHTML=items.map(([id,label])=>'<button type="button" class="'+(officePage===id?'active':'')+'" onclick="goOffice(\''+id+'\')">'+label+'</button>').join('')
+    +'<button type="button" class="danger" onclick="erpLogout()">🚪 Logout</button>';
+}
+function goOffice(p){
+  officePage=p;
+  sessionStorage.setItem("chamunda_office_page",officePage);
+  render();
+}
 function officeEntry(){
 db.officeEntries??=[];
 const selectedDate=window.officeFilterDate||today();
@@ -325,7 +338,7 @@ document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"
 +'<div id="officeWeightWrap">'+field('Weight (MT)','officeWeight','text','','','inputmode="decimal" placeholder="Dumper के लिए वजन"')+'</div>'
 +'<div id="officeVehicleWrap">'+field('Vehicle Number','officeVehicle','text','','','placeholder="Dumper का vehicle number"')+'</div>'
 +'<div id="officeNakaWrap">'+field('Naka Parchi','officeNaka','text','','','placeholder="Dumper की naka parchi"')+'</div>'
-+field('RST Number','officeRstNo','text','','','placeholder="RAT number" required')
++field('RST Number','officeRstNo','text','','','placeholder="RST number" required')
 +'</div><div class="actions"><button class="btn primary" type="submit">✓ Save Office Entry</button><button class="btn" type="button" onclick="officeEntry()">Clear</button></div></form></div>'
 +'<div class="panel"><div class="top"><div><h3 style="margin:0">Office Entries</h3><div class="muted"><b>📅 '+dmy(selectedDate)+' की entries</b> +(!hasPending&&rows.length?'<b>🔒 सभी entries Submit हो चुकी हैं</b>':'')+'</div></div><input class="field search" style="min-height:42px" type="date" value="'+selectedDate+'" onchange="window.officeFilterDate=this.value;officeEntry()"></div>'
 +'<div class="tablewrap"><table><tr><th>Serial</th><th>Time</th><th>Customer Name</th><th>Place</th><th>Vehicle Type</th><th>Vehicle Number</th><th>Material</th><th>Weight / Tractor</th><th>Naka</th><th>RST No.</th><th>Action</th></tr>'+ (tableRows||'<tr><td colspan="11" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>') +'</table></div>'
