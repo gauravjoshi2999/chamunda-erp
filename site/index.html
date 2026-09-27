@@ -341,7 +341,9 @@ function render(){try{
  if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup();
 }catch(e){console.error('ERP render error',e);const app=document.getElementById('app');if(app)app.innerHTML='<div class="panel"><h3>⚠️ ERP Load Error</h3><div class="notice">Software load करते समय समस्या आई। कृपया एक बार Refresh करें।</div><div class="muted">'+esc(e?.message||e)+'</div></div>';}}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
-function normalizeWeight(raw){const s=String(raw??'').trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(s.includes('.'))return Number(n.toFixed(3));if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
+function normalizeWeight(raw){let s=String(raw??'').trim().replace(/\s+/g,'');if(!s)return null;s=s.replace(/,/g,'');const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
+function normalizeEntryTime(raw){const s=String(raw??'').trim();if(!s)return currentTime12();let m=s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);if(m){let h=Number(m[1]);const mi=m[2],ap=m[3].toUpperCase();if(h>=1&&h<=12)return String((ap==='PM'?(h%12)+12:h%12)).padStart(2,'0')+':'+mi}m=s.match(/^(\d{1,2}):(\d{2})$/);if(m){const h=Number(m[1]);if(h>=0&&h<=23)return String(h).padStart(2,'0')+':'+m[2]}return currentTime()}
+function currentTime12(){const d=new Date(),h=d.getHours(),m=String(d.getMinutes()).padStart(2,'0');return String(h%12||12).padStart(2,'0')+':'+m+' '+(h>=12?'PM':'AM')}
 function nextSerial(){return Math.max(0,...db.sales.map(x=>Number(x.serial)||0))+1}
 function totals(){let sales=db.sales;return{entries:sales.length,weight:sales.reduce((a,x)=>a+Number(x.weight||0),0),amount:sales.reduce((a,x)=>a+Number(x.total||0),0),cash:sales.filter(x=>x.payment==="Cash").reduce((a,x)=>a+Number(x.total||0),0),udhar:sales.filter(x=>x.payment==="Udhar").reduce((a,x)=>a+Number(x.total||0),0)}}
 function normalizeOfficeSerials(){
@@ -377,13 +379,13 @@ normalizeOfficeSerials();
 const rows=db.officeEntries.filter(x=>x.date===selectedDate).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
 const mats=db.settings.materials||[];
 const materialOptions=mats.map(x=>'<option>'+esc(x)+'</option>').join('');
-const hasPending=rows.some(x=>x.status!=='submitted');const nakaRows=rows.filter(x=>{const s=String(x.naka??'').trim().replace(/,/g,'');return s!==''&&s!=='-'&&s!=='—'&&Number.isFinite(Number(s))});const nakaWeightRaw=nakaRows.reduce((a,x)=>a+(Number(x.weight)||0),0);const royaltyWeight=Math.round(nakaWeightRaw)*51;const nakaTotal=nakaRows.reduce((a,x)=>a+(Number(String(x.naka??'').trim().replace(/,/g,''))||0),0);const royaltyDifference=royaltyWeight-nakaTotal;const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+esc(x.time)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.place)+'</td><td>'+esc(x.vehicleType||'Dumper')+'</td><td>'+esc(x.vehicle||'')+'</td><td>'+esc(x.material)+'</td><td>'+(x.vehicleType==='Tractor'?esc(x.tractorCount||0)+' Tractor':num(x.weight)+' MT')+'</td><td>'+esc(x.naka||'')+'</td><td>'+esc(x.rst||'')+'</td><td>'+(x.status==='submitted'?'<span class="muted">🔒 Submitted</span>':'<button class="btn primary" data-id="'+esc(x._id)+'" onclick="editOfficeEntry(this.dataset.id)">Edit</button> <button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeEntry(this.dataset.id)">Delete</button>')+'</td></tr>').join('');
+const hasPending=rows.some(x=>x.status!=='submitted');const nakaRows=rows.filter(x=>{const s=String(x.naka??'').trim().replace(/,/g,'');return s!==''&&s!=='-'&&s!=='—'&&normalizeWeight(s)!==null});const nakaWeightRaw=nakaRows.reduce((a,x)=>a+(Number(x.weight)||0),0);const royaltyWeight=Math.round(nakaWeightRaw)*51;const nakaTotal=nakaRows.reduce((a,x)=>a+(normalizeWeight(x.naka)||0),0);const royaltyDifference=royaltyWeight-nakaTotal;const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+esc(x.time)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.place)+'</td><td>'+esc(x.vehicleType||'Dumper')+'</td><td>'+esc(x.vehicle||'')+'</td><td>'+esc(x.material)+'</td><td>'+(x.vehicleType==='Tractor'?esc(x.tractorCount||0)+' Tractor':num(x.weight)+' MT')+'</td><td>'+esc(x.naka||'')+'</td><td>'+esc(x.rst||'')+'</td><td>'+(x.status==='submitted'?'<span class="muted">🔒 Submitted</span>':'<button class="btn primary" data-id="'+esc(x._id)+'" onclick="editOfficeEntry(this.dataset.id)">Edit</button> <button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeEntry(this.dataset.id)">Delete</button>')+'</td></tr>').join('');
 document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+header('👷 Office Entry','Office staff के लिए सरल entry screen','')
 +'<div class="notice"><b>Office Login:</b> यहाँ Office Entry और भराव दोनों की entry की जा सकती है। Save होने के बाद यही data Main Login के Bharav section में तुरंत दिखाई देगा।</div>'
 +'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
 +field('Serial Number','officeSerial','number',officeNextSerial(selectedDate),'','readonly')
 +field('Date','officeDate','date',selectedDate,'','required')
-+field('Time','officeTime','time',currentTime(),'','required')
++field('Time','officeTime','text',currentTime12(),'','required placeholder="12:30 PM" autocomplete="off"')
 +field('Customer Name','officeCustomer','text','','','required autocomplete="off"')
 +field('Place','officePlace','text','','','required')
 +'<div class="field"><label>Vehicle Type</label><select name="officeVehicleType" id="officeVehicleType" required><option value="Dumper">Dumper</option><option value="Tractor">Tractor</option></select></div>'
@@ -407,7 +409,7 @@ const formDate=String(form?.elements?.officeDate?.value||today()).slice(0,10);
 if(!form){alert('Office Entry form नहीं मिला।');return;}
 if(!form.reportValidity())return;
 const get=n=>String(form.elements[n]?.value??'').trim();
-const date=get('officeDate')||today(),time=get('officeTime')||currentTime(),customer=get('officeCustomer'),place=get('officePlace'),vehicle=get('officeVehicle'),vehicleType=get('officeVehicleType')||'Dumper',tractorCount=get('officeTractorCount'),material=get('officeMaterial'),rawWeight=get('officeWeight'),naka=get('officeNaka'),ratNo=get('officeRstNo'),isTractor=vehicleType==='Tractor';
+const date=get('officeDate')||today(),time=normalizeEntryTime(get('officeTime')),customer=get('officeCustomer'),place=get('officePlace'),vehicle=get('officeVehicle'),vehicleType=get('officeVehicleType')||'Dumper',tractorCount=get('officeTractorCount'),material=get('officeMaterial'),rawWeight=get('officeWeight'),naka=get('officeNaka'),ratNo=get('officeRstNo'),isTractor=vehicleType==='Tractor';
 const missing=[
   ['officeDate','Date'],['officeTime','Time'],['officeCustomer','Customer Name'],['officePlace','Place'],
   ...(isTractor?[['officeTractorCount','कितने Tractor?']]:[['officeVehicle','Vehicle Number'],['officeWeight','Weight (MT)'],['officeNaka','Naka Parchi']]),
@@ -420,7 +422,7 @@ if(isTractor&&(!Number.isInteger(Number(tractorCount))||Number(tractorCount)<1))
 db.officeEntries??=[];
 normalizeOfficeSerials();
 const serial=officeNextSerial(date);
-db.officeEntries.push({date,time,serial,customer,place,vehicle:isTractor?'':vehicle,vehicleType,tractorCount:isTractor?Number(tractorCount):0,material,weight,naka:isTractor?'':naka,ratNo,status:'pending',_id:'office_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
+db.officeEntries.push({date,time,serial,customer,place,vehicle:isTractor?'':vehicle,vehicleType,tractorCount:isTractor?Number(tractorCount):0,material,weight,naka:isTractor?'':(normalizeWeight(naka)||0),ratNo,status:'pending',_id:'office_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
 if(customer&&!db.customers.some(c=>String(c.name||'').trim().toLowerCase()===customer.toLowerCase()))db.customers.push({name:customer,mobile:'',created:date});
 save();window.officeFilterDate=date;toast('Office entry save हो गई — Main Entry में complete होगी');officeEntry();
 }
