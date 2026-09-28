@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1769d3"><link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1769d3"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><link rel="manifest" href="/manifest.json">
 <title>JCB Entry • Chamunda ERP</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f2f5f8;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#17202a}
@@ -37,6 +37,6 @@ async function connectFirebase(){if(!navigator.onLine)return false;try{if(!windo
 async function start(){render();openDB().then(async()=>{await connectFirebase();await status()}).catch(()=>status())}
 window.addEventListener('online',async()=>{await connectFirebase();await flushQueue();status();});
 window.addEventListener('offline',status);
-window.addEventListener('load',()=>{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{})});
+window.addEventListener('load',()=>{if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{})});
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data?.type==='JCB_SYNC')connectFirebase().then(flushQueue)});setInterval(()=>{if(navigator.onLine)connectFirebase().then(flushQueue)},15000);
 start();</script></body></html>
