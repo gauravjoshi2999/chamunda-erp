@@ -320,8 +320,8 @@ cloudJcbInboxUnsub=cloudRef.child('jcbInbox').on('value',snap=>{
       localStorage.setItem('chamunda_jcb_cloud_last_id',jcbCloudLastId);
       localStorage.setItem(KEY,JSON.stringify(db));
       cloudRef.child('jcbInbox').child(key).remove().catch(()=>{});
-      scheduleCloudPush();
-      if(page==='jcb')jcb();else render();
+      if(cloudRef){cloudRef.child('jcbEntries').set(db.jcbEntries).catch(()=>{});}
+      if(page==='jcbverify')jcbVerification(false);else render();
     });
   }catch(e){}
 },()=>{});};const savedMode=localStorage.getItem("chamunda_erp_login_mode");
