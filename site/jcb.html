@@ -21,7 +21,7 @@ h2{text-align:center;font-size:24px;margin:12px 0 16px}.grid{display:grid;grid-t
 const FIREBASE_CONFIG={apiKey:"AIzaSyDK25r1xMH5J_cZiXICR6SkPs1wfyA8iY8",authDomain:"chamunda-erp.firebaseapp.com",databaseURL:"https://chamunda-erp-default-rtdb.firebaseio.com",projectId:"chamunda-erp",storageBucket:"chamunda-erp.firebasestorage.app",messagingSenderId:"613859592512",appId:"1:613859592512:web:0ca59647db0a49d60312a5"};
 const app=document.getElementById('app'),syncBox=document.getElementById('sync');const today=()=>new Date().toISOString().slice(0,10);const dmy=d=>{const [y,m,dd]=String(d).slice(0,10).split('-');return dd+'/'+m+'/'+y};const timeNow=()=>new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let dbRef=null,materials=['6 MM','10 MM','12 MM','40 MM','Dust','WMM','भराव'],state={step:1,vehicle:'',material:''};
 
-const IDB='jcbOfflineDB',LS='jcbOfflineQueue';let idb;
+const IDB='jcbOfflineDB',STORE='queue',LS='jcbOfflineQueue';let idb;
 function lsAll(){try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch{return[]}}
 function lsSave(a){try{localStorage.setItem(LS,JSON.stringify(a));return true}catch{return false}}
 function openDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open(IDB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:'id',autoIncrement:true})};r.onsuccess=()=>{idb=r.result;res(idb)};r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
