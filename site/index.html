@@ -303,30 +303,29 @@ cloudJcbUnsub=cloudRef.child('jcbEntries').on('value',snap=>{
     }
   }catch(e){}
 },()=>{});
-cloudJcbInboxUnsub=cloudRef.child('jcbInbox').on('value',snap=>{
+cloudJcbInboxUnsub=cloudRef.root.child('chamundaERP/jcbMobileEntries').on('value',snap=>{
   try{
     const v=snap.val()||{};
     const items=Array.isArray(v)?v:Object.entries(v).map(([key,value])=>({key,value}));
     items.forEach(item=>{
-      const key=item.key, e=Array.isArray(v)?item:v[key];
+      const key=item.key,e=Array.isArray(v)?item:v[key];
       if(!e||!e._id)return;
-      if((db.jcbEntries||[]).some(x=>String(x?._id||'')===String(e._id))){cloudRef.child('jcbInbox').child(key).remove().catch(()=>{});return;}
+      if((db.jcbEntries||[]).some(x=>String(x?._id||'')===String(e._id)))return;
       const date=String(e.date||today()).slice(0,10);
       const serial=jcbNextSerial(date);
+      const entry={...e,serial,status:'submitted'};
       db.jcbEntries=db.jcbEntries||[];
-      jcbInboxProcessing=true;
-      db.jcbEntries.push({...e,serial,status:'submitted'});
+      db.jcbEntries.push(entry);
       jcbCloudLastAt=Date.now();jcbCloudLastId=String(e._id||'');
       localStorage.setItem('chamunda_jcb_cloud_last_at',String(jcbCloudLastAt));
       localStorage.setItem('chamunda_jcb_cloud_last_id',jcbCloudLastId);
       localStorage.setItem(KEY,JSON.stringify(db));
-      cloudRef.child('jcbInbox').child(key).remove().catch(()=>{});
-      if(cloudRef){
-        const payload=JSON.parse(JSON.stringify(db));
-        cloudWriting=true;
-        cloudRef.set(payload).then(()=>{cloudWriting=false;return cloudRef.child('jcbInbox').child(key).remove();}).then(()=>{jcbInboxProcessing=false;cloudStatus('● JCB entry cloud में save हो गई',true);}).catch(()=>{cloudWriting=false;jcbInboxProcessing=false;cloudStatus('⚠ JCB cloud save failed',false);});
-      }
-      if(page==='jcbverify')jcbVerification(false);else render();
+      cloudRef.child('jcbEntries').child(String(e._id)).set(entry).then(()=>{
+        return cloudRef.root.child('chamundaERP/jcbMobileEntries').child(String(e._id)).remove();
+      }).then(()=>{
+        cloudStatus('● JCB mobile entry Main ERP में आ गई',true);
+        if(page==='jcbverify')jcbVerification(false);else render();
+      }).catch(()=>{});
     });
   }catch(e){}
 },()=>{});};const savedMode=localStorage.getItem("chamunda_erp_login_mode");
