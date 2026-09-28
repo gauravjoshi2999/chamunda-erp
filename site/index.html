@@ -385,75 +385,103 @@ function officeNextSerial(date){
 }
 function currentTime(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 let officePage=sessionStorage.getItem("chamunda_office_page")||"entry";
+function officeReportRows(date){
+  return (db.officeEntries||[])
+    .filter(x=>String(x.date||'').slice(0,10)===String(date||'').slice(0,10))
+    .sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
+}
+async function ensureJsPdf(){
+  if(window.jspdf?.jsPDF)return window.jspdf.jsPDF;
+  await new Promise((resolve,reject)=>{
+    const sc=document.createElement("script");
+    sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    sc.onload=resolve;sc.onerror=()=>reject(new Error("PDF library load failed"));
+    document.head.appendChild(sc);
+  });
+  if(!window.jspdf?.jsPDF)throw new Error("PDF library unavailable");
+  return window.jspdf.jsPDF;
+}
+function buildOfficeDayPdf(date){
+  return ensureJsPdf().then(jsPDF=>{
+    const rows=officeReportRows(date);
+    if(!rows.length)throw new Error("NO_ENTRIES");
+    const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    const nakaRows=rows.filter(r=>normalizeWeight(r.naka)!==null);
+    const nakaTotal=nakaRows.reduce((a,r)=>a+(normalizeWeight(r.naka)||0),0);
+    const weightTotal=nakaRows.reduce((a,r)=>a+(normalizeWeight(r.weight)||0),0);
+    const nakaAmount=nakaTotal*51;
+    const royaltyWeightAmount=weightTotal*51;
+    const headers=["S.No","Time","Customer","Place","Vehicle Type","Tractor Count / Vehicle No.","Material","Weight","Naka","RST Number","Date"];
+    const widths=[10,20,31,31,23,37,28,19,19,23,23];
+    const pageLeft=8,pageRight=8,pageWidth=297-pageLeft-pageRight;
+    const scale=pageWidth/widths.reduce((a,b)=>a+b,0);
+    const ws=widths.map(w=>w*scale);
+    const rowH=7;
+    let y=28;
+    const drawHeader=()=>{
+      let x=pageLeft;
+      doc.setFont("helvetica","bold");doc.setFontSize(7.5);
+      headers.forEach((h,i)=>{doc.rect(x,y,ws[i],rowH);doc.text(String(h),x+1,y+4.5,{maxWidth:ws[i]-2});x+=ws[i]});
+      y+=rowH;doc.setFont("helvetica","normal");
+    };
+    const drawRows=()=>{
+      rows.forEach(r=>{
+        if(y>185){doc.addPage();y=15;drawHeader();}
+        const vehicle=r.vehicleType==="Tractor"?("Tractor: "+(r.tractorCount||0)):String(r.vehicle||"");
+        const vals=[r.serial||"",displayTime12(r.time),r.customer||"",r.place||"",r.vehicleType||"Dumper",vehicle,r.material||"",
+          r.vehicleType==="Tractor"?"0":(normalizeWeight(r.weight)??0)+" MT",
+          normalizeWeight(r.naka)!==null?normalizeWeight(r.naka)+"":"",r.rst||r.ratNo||"",dmy(date)];
+        let x=pageLeft;doc.setFontSize(7.2);
+        vals.forEach((v,i)=>{doc.rect(x,y,ws[i],rowH);doc.text(String(v??""),x+1,y+4.5,{maxWidth:ws[i]-2});x+=ws[i]});
+        y+=rowH;
+      });
+    };
+    doc.setFontSize(16);doc.setFont("helvetica","bold");doc.text("Chamunda ERP - Office Entry Daily Report",pageLeft,14);
+    doc.setFontSize(9);doc.setFont("helvetica","normal");doc.text("Date: "+dmy(date),pageLeft,20);
+    drawHeader();drawRows();
+    if(y>170){doc.addPage();y=18;}
+    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text("Summary",pageLeft,y+5);y+=9;
+    const summary=[
+      ["Valid Naka Records",String(nakaRows.length)],
+      ["Naka Total",String(nakaTotal)+" × 51 = ₹"+Number(nakaAmount).toLocaleString("en-IN",{maximumFractionDigits:3})],
+      ["Corresponding Weight Total",String(weightTotal)+" MT × 51 = ₹"+Number(royaltyWeightAmount).toLocaleString("en-IN",{maximumFractionDigits:3})]
+    ];
+    doc.setFontSize(8);doc.setFont("helvetica","normal");
+    summary.forEach(([k,v])=>{doc.rect(pageLeft,y,85,7);doc.rect(pageLeft+85,y,120,7);doc.setFont("helvetica","bold");doc.text(k,pageLeft+1,y+4.5);doc.setFont("helvetica","normal");doc.text(v,pageLeft+86,y+4.5,{maxWidth:118});y+=7;});
+    return doc.output("blob");
+  });
+}
+async function downloadOfficeDayPdf(date){
+  try{
+    const rows=officeReportRows(date);
+    if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return;}
+    const blob=await buildOfficeDayPdf(date);
+    const name="chamunda-office-report-"+String(date).replace(/[^0-9-]/g,"")+".pdf";
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),3000);
+  }catch(e){if(e.message!=="NO_ENTRIES")alert("PDF generate नहीं हो पाया। कृपया दोबारा कोशिश करें।");}
+}
 async function sendOfficeDayWhatsApp(date){
   try{
-    const rows=(db.officeEntries||[]).filter(x=>x.date===date).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
-    if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return}
-    if(!window.jspdf){
-      await new Promise((resolve,reject)=>{
-        const sc=document.createElement("script");
-        sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-        sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc)
-      })
+    const rows=officeReportRows(date);
+    if(!rows.length){alert("इस तारीख की कोई entry नहीं है।");return;}
+    const blob=await buildOfficeDayPdf(date);
+    const name="chamunda-office-report-"+String(date).replace(/[^0-9-]/g,"")+".pdf";
+    const file=new File([blob],name,{type:"application/pdf"});
+    const shareText="Chamunda ERP - Office Entry\nDate: "+dmy(date)+"\nEntries: "+rows.length+"\n\nPDF attached.";
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({title:"Chamunda ERP Office Entry",text:shareText,files:[file]});
+      return;
     }
-    const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
-    const nakaRows=rows.filter(r=>{const s=String(r.naka??"").trim().replace(/,/g,"");return s!==""&&s!=="-"&&s!=="—"&&normalizeWeight(s)!==null});
-    const weightSum=nakaRows.reduce((a,r)=>a+(Number(r.weight)||0),0);
-    const royaltyWeight=Math.round(weightSum)*51;
-    const nakaSum=nakaRows.reduce((a,r)=>a+(normalizeWeight(r.naka)||0),0);
-    const nakaRoyalty=nakaSum*51;
-    const difference=royaltyWeight-nakaRoyalty;
-    const bharavRows=(db.bharav||[]).filter(x=>String(x.date||"").slice(0,10)===date);
-    const bharavTrips=bharavRows.reduce((a,x)=>a+(Number(x.tractors)||0),0);
-    const bharavCash=bharavRows.filter(x=>String(x.payment||'').toLowerCase()==='cash').reduce((a,x)=>a+(Number(x.tractors)||0),0);
-    const bharavUdhar=bharavRows.filter(x=>String(x.payment||'').toLowerCase()==='udhar').reduce((a,x)=>a+(Number(x.tractors)||0),0);
-    const bharavAmount=bharavRows.reduce((a,x)=>a+(Number(x.amount)||0),0);
-
-    doc.setFontSize(16);doc.text("Chamunda ERP - Office Daily Report",14,14);
-    doc.setFontSize(10);doc.text("Date: "+dmy(date),14,21);
-    let y=29,x=10;
-    const headers=["S.No","Time","Customer","Place","Vehicle","Material","Weight/Tractor","Naka","RST"];
-    const widths=[12,20,38,35,22,28,28,22,20];
-    doc.setFontSize(8);
-    headers.forEach((h,i)=>{doc.rect(x,y,widths[i],7);doc.text(String(h),x+1,y+4.5);x+=widths[i]});
-    y+=7;
-    rows.forEach(r=>{
-      if(y>185){doc.addPage();y=15}
-      x=10;
-      const vals=[r.serial,displayTime12(r.time),r.customer,r.place,r.vehicle||"",r.material,r.vehicleType==="Tractor"?(String(r.tractorCount||0)+" Tractor"):(num(r.weight)+" MT"),r.naka||"",r.rst||r.ratNo||""];
-      vals.forEach((v,i)=>{let t=String(v??"");if(t.length>28)t=t.slice(0,27)+"…";doc.rect(x,y,widths[i],7);doc.text(t,x+1,y+4.5);x+=widths[i]});
-      y+=7
-    });
-
-    if(y>165){doc.addPage();y=18}
-    y+=7;
-
-    // Compact summary table matching the width/row height of the main report table.
-    const summaryX=10, summaryY=y, summaryWidths=[47.5,47.5,47.5,47.5];
-    const summaryHeaders=["Bharav Total","Royalty","Naka","Difference"];
-    const summaryValues=[
-      num(bharavTrips)+" Tractor",
-      Number(royaltyWeight||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
-      Number(nakaRoyalty||0).toLocaleString("en-IN",{maximumFractionDigits:2}),
-      Number(difference||0).toLocaleString("en-IN",{maximumFractionDigits:2})
-    ];
-    doc.setFontSize(8);
-    let sx=summaryX;
-    summaryHeaders.forEach((h,i)=>{doc.rect(sx,summaryY,summaryWidths[i],7);doc.setFont("helvetica","normal");doc.text(h,sx+1,summaryY+4.5);sx+=summaryWidths[i]});
-    sx=summaryX;
-    summaryValues.forEach((v,i)=>{doc.rect(sx,summaryY+7,summaryWidths[i],7);doc.setFont("helvetica","bold");doc.text(String(v),sx+1,summaryY+4.5+7);sx+=summaryWidths[i]});
-    doc.setFont("helvetica","normal");
-
-    const blob=doc.output("blob");
-    const file=new File([blob],"chamunda-office-report-"+String(date).replace(/[^0-9-]/g,"")+".pdf",{type:"application/pdf"});
-    const msg="*Chamunda ERP*\\n*"+dmy(date)+"*\\n\\n🚜 *Bharav* - "+bharavCash+" tractor cash, "+bharavUdhar+" tractor udhar (total "+bharavTrips+" tractor)\\n💰 *Royalty* - ₹"+Number(royaltyWeight||0).toLocaleString("en-IN")+"\\n📋 *Naka* - ₹"+Number(nakaRoyalty||0).toLocaleString("en-IN")+"\\n➖ *Difference* - ₹"+Number(difference||0).toLocaleString("en-IN");
-    if(navigator.share){
-      await navigator.share({title:"Chamunda ERP Daily Report",text:msg,files:[file]});
-    }else{
-      const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
-      window.open("https://wa.me/917426819484?text="+encodeURIComponent(msg),"_blank")
-    }
-  }catch(e){if(e?.name!=="AbortError")alert("PDF/WhatsApp share नहीं हो पाया। कृपया दोबारा कोशिश करें।")}
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),3000);
+    window.open("https://wa.me/?text="+encodeURIComponent(shareText),"_blank");
+    alert("PDF download हो गया है। WhatsApp में contact चुनें और PDF manually attach करके भेजें।");
+  }catch(e){
+    if(e?.name!=="AbortError" && e?.message!=="NO_ENTRIES")alert("PDF/WhatsApp share नहीं हो पाया। कृपया दोबारा कोशिश करें।");
+  }
 }
 
 function officeNav(){
@@ -490,7 +518,7 @@ const materialOptions=mats.map(x=>'<option>'+esc(x)+'</option>').join('');
 const hasPending=rows.some(x=>x.status!=='submitted'&&x.status!=='completed');const nakaRows=rows.filter(x=>{const s=String(x.naka??'').trim().replace(/,/g,'');return s!==''&&s!=='-'&&s!=='—'&&normalizeWeight(s)!==null});const nakaWeightRaw=nakaRows.reduce((a,x)=>a+(Number(x.weight)||0),0);const royaltyWeight=Math.round(nakaWeightRaw)*51;const nakaTotal=nakaRows.reduce((a,x)=>a+(normalizeWeight(x.naka)||0),0)*51;const royaltyDifference=royaltyWeight-nakaTotal;const tableRows=rows.map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+esc(displayTime12(x.time))+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.place)+'</td><td>'+esc(x.vehicleType||'Dumper')+'</td><td>'+esc(x.vehicle||'')+'</td><td>'+esc(x.material)+'</td><td>'+(x.vehicleType==='Tractor'?esc(x.tractorCount||0)+' Tractor':num(x.weight)+' MT')+'</td><td>'+esc(x.naka||'')+'</td><td>'+esc(x.rst||'')+'</td><td>'+(((x.status==='submitted'||x.status==='completed')&&!mainMode)?'<span class="muted">🔒 '+(x.status==='completed'?'Completed':'Submitted')+'</span>':'<button class="btn primary" data-id="'+esc(x._id)+'" onclick="editOfficeEntry(this.dataset.id)">Edit</button> <button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteOfficeEntry(this.dataset.id,true)">Delete</button>')+'</td></tr>').join('');
 document.getElementById('app').innerHTML='<div class="office-nav" id="officeNav"></div>'+header('👷 Office Entry','Office staff के लिए सरल entry screen','')
 +'<div class="notice"><b>Office Login:</b> यहाँ Office Entry और भराव दोनों की entry की जा सकती है। Save होने के बाद यही data Main Login के Bharav section में तुरंत दिखाई देगा।</div>'
-+'<div class="panel" style="margin-bottom:12px"><button type="button" class="btn primary" onclick="sendOfficeDayWhatsApp(window.officeFilterDate||today())">📲 Send to WhatsApp</button><div class="muted" style="margin-top:6px">आज की सभी Office entries की PDF बनेगी। फिर WhatsApp/contact चुनकर भेजें।</div></div>'+'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
++'<div class="panel" style="margin-bottom:12px"><h3 style="margin:0 0 8px">📄 आज की Office Entry Report</h3><div class="actions" style="margin:0"><button type="button" class="btn" onclick="downloadOfficeDayPdf(window.officeFilterDate||today())">📄 Download Today PDF</button><button type="button" class="btn primary" onclick="sendOfficeDayWhatsApp(window.officeFilterDate||today())">📲 Send to WhatsApp</button></div><div class="muted" style="margin-top:7px">PDF में आज की सभी entries और summary आएगी। WhatsApp पर कोई number hard-code नहीं है; Android में contact चुनकर PDF share/attach कर सकते हैं।</div></div>'+'<div class="panel"><h3>नई Office Entry</h3><form onsubmit="saveOfficeEntry(event)"><div class="grid">'
 +field('Serial Number','officeSerial','number',officeNextSerial(selectedDate),'','readonly')
 +field('Date','officeDate','date',selectedDate,'','required')
 +field('Time','officeTime','text',currentTime12(),'','required placeholder="12:30 PM" autocomplete="off"')
