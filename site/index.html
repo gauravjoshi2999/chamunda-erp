@@ -103,7 +103,20 @@ input,select,textarea{max-width:100%}
   #loginGate .profile-card{min-height:160px!important;padding:12px 8px!important}
 }
 @media(max-width:390px){#loginGate .profile-grid{grid-template-columns:1fr!important}}
-</style></head>
+</style>
+<style>
+/* Final mobile layout fix: prevent dashboard from being pushed to the right */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+.app{width:100%;max-width:100%}
+@media(max-width:720px){
+  .app{display:block!important;width:100%!important;max-width:100%!important}
+  .main{margin-left:0!important;width:100%!important;max-width:none!important;min-width:0!important;padding:10px 9px 82px!important}
+  .top{width:100%!important;max-width:100%!important}
+  .top>div:first-child{min-width:0!important;max-width:100%!important}
+  .cards,.panel,.reportgrid{max-width:100%!important}
+}
+</style>
+</head>
 <body>
 <div class="app">
 <aside class="side">
@@ -330,13 +343,24 @@ function select(label,name,opts,value=""){return `<div class="field"><label>${la
 function header(title,sub,button=""){return `<div class="top"><div><div class="title">${title}</div><div class="muted">${sub}</div></div>${button}</div>`}
 function render(){try{
  const side=document.querySelector('.side'),main=document.querySelector('.main');
+ const isMobile=window.matchMedia && window.matchMedia('(max-width:720px)').matches;
  if(userMode==='office'){
    if(side)side.style.display='none';
-   if(main){main.style.marginLeft='0';main.style.width='100%';main.style.maxWidth='none';main.style.padding='14px';}
+   if(main){
+     main.style.marginLeft='0';
+     main.style.width='100%';
+     main.style.maxWidth='none';
+     main.style.padding=isMobile?'10px 9px 82px':'14px';
+   }
    if(officePage==='bharav')officeBharav();else if(officePage==='diesel')officeDiesel();else officeEntry();return;
  }
  if(side)side.style.display='';
- if(main){main.style.marginLeft='235px';main.style.width='calc(100% - 235px)';main.style.maxWidth='1600px';main.style.padding='20px';}
+ if(main){
+   main.style.marginLeft=isMobile?'0':'235px';
+   main.style.width=isMobile?'100%':'calc(100% - 235px)';
+   main.style.maxWidth=isMobile?'none':'1600px';
+   main.style.padding=isMobile?'10px 9px 82px':'20px';
+ }
  nav();
  if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup();
 }catch(e){console.error('ERP render error',e);const app=document.getElementById('app');if(app)app.innerHTML='<div class="panel"><h3>⚠️ ERP Load Error</h3><div class="notice">Software load करते समय समस्या आई। कृपया एक बार Refresh करें।</div><div class="muted">'+esc(e?.message||e)+'</div></div>';}}
