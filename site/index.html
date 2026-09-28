@@ -131,7 +131,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <div class="login-heading">Welcome back</div><div class="login-subtitle">Login करने के लिए अपना profile चुनें</div>
       <div class="profile-grid">
         <button type="button" class="profile-card main-profile" onclick="showAdminLogin()"><div class="avatar avatar-main">👨‍💼</div><div class="profile-title">Main Login</div><div class="profile-desc">Admin / Main Dashboard</div><div class="profile-arrow">→</div></button>
-        <button type="button" class="profile-card office-profile" onclick="showOfficeLogin()"><div class="avatar avatar-office">👷</div><div class="profile-title">Office Login</div><div class="profile-desc">Entry / Bharav / Diesel</div><div class="profile-arrow">→</div></button><button type="button" class="profile-card jcb-profile" onclick="showJcbLogin()"><div class="avatar" style="background:#e9f7ef">🚜</div><div class="profile-title">JCB Login</div><div class="profile-desc">Loading Point Verification</div><div class="profile-arrow">→</div></button>
+        <button type="button" class="profile-card office-profile" onclick="showOfficeLogin()"><div class="avatar avatar-office">👷</div><div class="profile-title">Office Login</div><div class="profile-desc">Entry / Bharav / Diesel</div><div class="profile-arrow">→</div></button>
       </div>
       <div class="login-footer">🔒 Secure access • Chamunda ERP</div>
     </div>
@@ -289,11 +289,10 @@ if(firebase.auth().currentUser&&savedMode){
   authUser=firebase.auth().currentUser;userMode=savedMode;startDb();return true;
 }
 if(savedMode==='jcb'){
-  firebase.auth().signInAnonymously().then(u=>{
-    authUser=u.user||u;userMode='jcb';officePage='jcb';sessionStorage.setItem("chamunda_office_page","jcb");hideLogin();startDb();
-  }).catch(e=>{
-    userMode='';localStorage.removeItem("chamunda_erp_login_mode");showLogin();
-  });
+  localStorage.removeItem("chamunda_erp_login_mode");
+  try{firebase.auth().signOut().catch(()=>{});}catch(e){}
+  userMode='';
+  showLogin();
   return false;
 }
 if(!savedMode){
@@ -1109,6 +1108,8 @@ if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.ser
 if("caches" in window)window.addEventListener("load",()=>caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{}));
 function bootERP(){
   try{
+    // JCB operators now use the standalone /jcb.html page.
+    if(localStorage.getItem("chamunda_erp_login_mode")==="jcb")localStorage.removeItem("chamunda_erp_login_mode");
     showLogin();
     if(db.settings?.cloudSync?.enabled)loadFirebaseSdk().then(()=>initCloud()).catch(()=>{});
   }catch(e){
