@@ -320,7 +320,11 @@ cloudJcbInboxUnsub=cloudRef.child('jcbInbox').on('value',snap=>{
       localStorage.setItem('chamunda_jcb_cloud_last_id',jcbCloudLastId);
       localStorage.setItem(KEY,JSON.stringify(db));
       cloudRef.child('jcbInbox').child(key).remove().catch(()=>{});
-      if(cloudRef){cloudRef.child('jcbEntries').set(db.jcbEntries).catch(()=>{});}
+      if(cloudRef){
+        const payload=JSON.parse(JSON.stringify(db));
+        cloudWriting=true;
+        cloudRef.set(payload).then(()=>{cloudWriting=false;cloudStatus('● JCB entry cloud में save हो गई',true);}).catch(()=>{cloudWriting=false;cloudStatus('⚠ JCB cloud save failed',false);});
+      }
       if(page==='jcbverify')jcbVerification(false);else render();
     });
   }catch(e){}
