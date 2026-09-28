@@ -350,7 +350,7 @@ function cloudDisconnect(){
 }
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.style.display="block";setTimeout(()=>t.style.display="none",1800)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-const pages=[["dashboard","🏠","Dashboard"],["jcbverify","🚜","JCB Verification"],["sale","🚛","Sale Entry"],["customers","👥","Customers / Khata"],["bharav","🚜","भराव"],["royalty","📜","Royalty"],["diesel","⛽","Diesel"],["reports","📊","Reports"],["backup","💾","Backup"],["settings","⚙️","Settings"]];
+const pages=[["dashboard","🏠","Dashboard"],["jcbverify","🚜","JCB Loading"],["sale","🚛","Sale Entry"],["customers","👥","Customers / Khata"],["bharav","🚜","भराव"],["royalty","📜","Royalty"],["diesel","⛽","Diesel"],["reports","📊","Reports"],["backup","💾","Backup"],["settings","⚙️","Settings"]];
 let page="dashboard";
 function nav(){document.getElementById("nav").innerHTML=pages.filter(p=>p[0]==="settings"||!(db.settings.hiddenMenus||[]).includes(p[0])).map(p=>`<button class="${page===p[0]?"active":""}" onclick="go('${p[0]}')">${p[1]} ${p[2]}</button>`).join("")}
 function go(p){page=p;nav();render()}
@@ -526,36 +526,82 @@ function compressJcbPhoto(file){
 }
 function jcbNav(){
   const el=document.getElementById('jcbNav');if(!el)return;
-  el.innerHTML='<button type="button" class="active">🚜 New Entry</button><button type="button" onclick="jcbVerification(true)">📋 आज की Verification</button><button type="button" class="danger" onclick="erpLogout()">🚪 Logout</button>';
+  el.innerHTML='<button type="button" class="active">🚜 New Entry</button><button type="button" class="danger" onclick="erpLogout()">🚪 Logout</button>';
 }
 function jcbEntry(){
   db.jcbEntries??=[];
   const d=today(),serial=jcbNextSerial(d),mats=db.settings.materials||[];
-  document.getElementById('app').innerHTML='<div class="office-nav" id="jcbNav"></div>'+
-  header('🚜 JCB Loading Point Verification','Dumper / Tractor आने पर केवल आसान entry और photo लें','')+
-  '<div class="notice"><b>JCB वाले को सिर्फ button दबाने हैं:</b> Serial अपने-आप आएगा → Customer चुनें/लिखें → Vehicle Type → Material → Photo → Save.</div>'+
-  '<div class="panel"><h3>नई JCB Entry</h3><form id="jcbEntryForm"><div class="grid">'+
-  field('Serial Number','serial','number',serial,'','readonly')+
-  field('Date','date','date',d,'','required')+
-  field('Time','time','time',currentTime(),'','required')+
-  (()=>{const names=[...new Set((db.customers||[]).map(c=>String(c?.name||'').trim()).concat((db.sales||[]).map(x=>String(x?.customer||'').trim())).filter(Boolean))].sort((a,b)=>a.localeCompare(b));return '<div class="field"><label>Customer Name</label><input name="customer" list="jcbCustomers" type="text" required placeholder="Customer का नाम"><datalist id="jcbCustomers">'+names.map(n=>'<option value="'+esc(n)+'"></option>').join('')+'</datalist></div>'})()+
-  '<div class="field"><label>Vehicle Type</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" class="btn primary" id="jcbDumperBtn" onclick="selectJcbVehicle(\'Dumper\')">🚚 Dumper</button><button type="button" class="btn" id="jcbTractorBtn" onclick="selectJcbVehicle(\'Tractor\')">🚜 Tractor</button></div><input type="hidden" name="vehicleType" id="jcbVehicleType" value="Dumper"></div>'+
-  '<div class="field" id="jcbVehicleWrap"><label>Vehicle Number</label><input name="vehicle" id="jcbVehicle" type="text" placeholder="Dumper vehicle number"></div>'+
-  '<div class="field"><label>Material / Product</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">'+mats.map((m,i)=>'<button type="button" class="btn '+(i===0?'primary':'')+'" data-material="'+esc(m)+'" onclick="selectJcbMaterial(this.dataset.material)">'+esc(m)+'</button>').join('')+'</div><input type="hidden" name="material" id="jcbMaterial" value="'+esc(mats[0]||'')+'"></div>'+
-  '<div class="field"><label>गाड़ी की Photo</label><input id="jcbPhoto" name="photo" type="file" accept="image/*" capture="environment" required><div id="jcbPhotoPreview" class="muted" style="margin-top:7px">Photo लेना जरूरी है।</div></div>'+
-  '</div><div class="actions"><button class="btn green" type="submit" style="min-width:180px">✓ जमा करें</button><button class="btn" type="button" onclick="jcbEntry()">Clear</button></div></form></div>'+
-  '<div class="panel"><h3>आज की JCB Entries</h3><div class="tablewrap"><table><tr><th>Serial</th><th>Time</th><th>Customer</th><th>Vehicle</th><th>Material</th><th>Photo</th></tr>'+
-  ((db.jcbEntries||[]).filter(x=>x.date===d).sort((a,b)=>Number(a.serial)-Number(b.serial)).map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+esc(displayTime12(x.time))+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.vehicleType)+(x.vehicle?'<br>'+esc(x.vehicle):'')+'</td><td>'+esc(x.material)+'</td><td>'+(x.photo?'<button class="btn" data-id="'+esc(x._id)+'" onclick="viewJcbPhoto(this.dataset.id)">📷 देखें</button>':'-')+'</td></tr>').join('')||'<tr><td colspan="6" class="empty">आज अभी कोई JCB entry नहीं है।</td></tr>')+
-  '</table></div></div>';
-  jcbNav();selectJcbVehicle('Dumper');selectJcbMaterial(mats[0]||'');
-  const pf=document.getElementById('jcbPhoto');if(pf)pf.onchange=()=>{const file=pf.files?.[0];document.getElementById('jcbPhotoPreview').textContent=file?file.name+' — Photo ready':'Photo लेना जरूरी है';};
-  document.getElementById('jcbEntryForm').onsubmit=async e=>{
-    e.preventDefault();const form=e.currentTarget;if(!form.reportValidity())return;
-    const file=document.getElementById('jcbPhoto')?.files?.[0];if(!file)return alert('गाड़ी की photo लेना जरूरी है');
-    const x=Object.fromEntries(new FormData(form));x.serial=Number(x.serial);x.date=x.date||today();x.time=x.time||currentTime();x.customer=x.customer.trim();x.vehicleType=x.vehicleType||'Dumper';x.vehicle=x.vehicleType==='Dumper'?(x.vehicle||'').trim():'';x.material=x.material||mats[0]||'';x.photo=await compressJcbPhoto(file);x.status='pending';x._id='jcb_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-    if(x.vehicleType==='Dumper'&&!x.vehicle){alert('Dumper का vehicle number डालें');return}
-    db.jcbEntries.push(x);if(x.customer&&!db.customers.some(c=>String(c.name||'').trim().toLowerCase()===x.customer.toLowerCase()))db.customers.push({name:x.customer,mobile:'',created:x.date});save();toast('JCB entry save हो गई');jcbEntry();
-  };
+  window.jcbStep=Number(window.jcbStep||1);
+  window.jcbDraft=window.jcbDraft||{date:d,serial,time:currentTime(),vehicleType:'',customer:'',material:'',photo:''};
+  if(window.jcbDraft.date!==d){window.jcbStep=1;window.jcbDraft={date:d,serial,time:currentTime(),vehicleType:'',customer:'',material:'',photo:''};}
+  window.jcbDraft.serial=serial;window.jcbDraft.date=d;window.jcbDraft.time=currentTime();
+
+  const step=Math.min(5,Math.max(1,window.jcbStep));
+  const draft=window.jcbDraft;
+  const progress=[1,2,3,4,5].map(n=>'<span style="flex:1;height:7px;border-radius:99px;background:'+(n<=step?'#1769d3':'#dbe3ea')+'"></span>').join('');
+  const top='<div class="office-nav" id="jcbNav"></div>'+
+    '<div class="panel" style="text-align:center;padding:12px"><div style="font-size:13px;font-weight:800">आज की तारीख: '+esc(dmy(d))+' &nbsp; | &nbsp; Serial No.: <span style="font-size:18px">'+esc(serial)+'</span> &nbsp; | &nbsp; Time: '+esc(displayTime12(draft.time))+'</div><div style="display:flex;gap:5px;margin-top:10px">'+progress+'</div></div>';
+
+  let body='';
+  if(step===1){
+    body='<div class="panel" style="text-align:center"><div style="font-size:24px;font-weight:900;margin-bottom:8px">गाड़ी चुनें</div><div class="muted" style="margin-bottom:18px">सिर्फ गाड़ी के चिन्ह पर दबाएँ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><button type="button" class="btn '+(draft.vehicleType==='Dumper'?'primary':'')+'" style="min-height:150px;font-size:25px;font-weight:900" onclick="jcbPickVehicle('Dumper')">🚚<br><span style="font-size:20px">DUMPER</span></button><button type="button" class="btn '+(draft.vehicleType==='Tractor'?'primary':'')+'" style="min-height:150px;font-size:25px;font-weight:900" onclick="jcbPickVehicle('Tractor')">🚜<br><span style="font-size:20px">TRACTOR</span></button></div></div>';
+  }else if(step===2){
+    const names=[...new Set((db.customers||[]).map(x=>String(x?.name||'').trim()).concat((db.sales||[]).map(x=>String(x?.customer||'').trim())).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    body='<div class="panel"><div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:16px">Customer का नाम</div><div class="field"><input id="jcbCustomerStep" list="jcbCustomers" value="'+esc(draft.customer)+'" type="text" autocomplete="off" placeholder="यहाँ नाम लिखें" style="font-size:21px;min-height:58px;text-align:center"><datalist id="jcbCustomers">'+names.map(n=>'<option value="'+esc(n)+'"></option>').join('')+'</datalist></div><button type="button" class="btn primary" style="width:100%;min-height:58px;font-size:20px;margin-top:14px" onclick="jcbNextCustomer()">➡️ आगे</button></div>';
+  }else if(step===3){
+    body='<div class="panel"><div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:16px">Material चुनें</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+mats.map(m=>'<button type="button" class="btn '+(draft.material===m?'primary':'')+'" style="min-height:70px;font-size:19px;font-weight:850" data-material="'+esc(m)+'" onclick="jcbPickMaterial(this.dataset.material)">'+esc(m)+'</button>').join('')+'</div></div>';
+  }else if(step===4){
+    body='<div class="panel" style="text-align:center"><div style="font-size:24px;font-weight:900;margin-bottom:8px">गाड़ी की Photo लें</div><div class="muted" style="margin-bottom:16px">मोबाइल camera खुलेगा। गाड़ी की साफ photo लें।</div><input id="jcbPhotoStep" type="file" accept="image/*" capture="environment" style="width:100%;min-height:58px;padding:12px;border:2px dashed #9fb3c7;border-radius:12px;background:#f8fafc"><div id="jcbPhotoPreview" class="muted" style="margin-top:10px">'+(draft.photo?'✓ Photo ready':'Photo लेना जरूरी है')+'</div></div>';
+  }else{
+    body='<div class="panel" style="text-align:center"><div style="font-size:25px;font-weight:900;margin-bottom:15px">सब सही है?</div><div style="font-size:18px;line-height:1.9;text-align:left;background:#f7f9fb;border-radius:12px;padding:14px"><b>Serial:</b> '+esc(serial)+'<br><b>गाड़ी:</b> '+esc(draft.vehicleType==='Dumper'?'🚚 Dumper':'🚜 Tractor')+(draft.vehicle?' — '+esc(draft.vehicle):'')+'<br><b>Customer:</b> '+esc(draft.customer)+'<br><b>Material:</b> '+esc(draft.material)+'<br><b>Photo:</b> '+(draft.photo?'✓ ली गई':'✗ बाकी')+'</div><button type="button" class="btn green" style="width:100%;min-height:68px;font-size:23px;margin-top:16px" onclick="submitJcbEntry()">✅ SUBMIT / जमा करें</button></div>';
+  }
+  document.getElementById('app').innerHTML=top+body;
+  jcbNav();
+
+  if(step===4){
+    const pf=document.getElementById('jcbPhotoStep');
+    if(pf)pf.onchange=async()=>{
+      const file=pf.files?.[0];
+      if(!file)return;
+      try{
+        draft.photo=await compressJcbPhoto(file);
+        draft.photoName=file.name||'Photo';
+        const pv=document.getElementById('jcbPhotoPreview');if(pv)pv.textContent='✓ Photo ready';
+        window.jcbStep=5;jcbEntry();
+      }catch(e){alert(e.message||'Photo नहीं पढ़ी जा सकी');}
+    };
+  }
+}
+
+function jcbPickVehicle(type){
+  window.jcbDraft=window.jcbDraft||{};
+  window.jcbDraft.vehicleType=type==='Tractor'?'Tractor':'Dumper';
+  window.jcbDraft.vehicle='';
+  window.jcbStep=2;jcbEntry();
+}
+function jcbNextCustomer(){
+  const el=document.getElementById('jcbCustomerStep'),name=String(el?.value||'').trim();
+  if(!name){alert('पहले Customer का नाम लिखें');return}
+  window.jcbDraft=window.jcbDraft||{};window.jcbDraft.customer=name;
+  window.jcbStep=3;jcbEntry();
+}
+function jcbPickMaterial(material){
+  const m=String(material||'').trim();if(!m)return;
+  window.jcbDraft=window.jcbDraft||{};window.jcbDraft.material=m;
+  window.jcbStep=4;jcbEntry();
+}
+async function submitJcbEntry(){
+  const d=today(),draft=window.jcbDraft||{};
+  if(!draft.vehicleType)return alert('गाड़ी चुनें');
+  if(!String(draft.customer||'').trim())return alert('Customer का नाम डालें');
+  if(!String(draft.material||'').trim())return alert('Material चुनें');
+  if(!draft.photo)return alert('गाड़ी की photo लेना जरूरी है');
+  const x={serial:jcbNextSerial(d),date:d,time:currentTime(),customer:String(draft.customer).trim(),vehicleType:draft.vehicleType,vehicle:'',material:String(draft.material).trim(),photo:draft.photo,status:'submitted',_id:'jcb_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)};
+  db.jcbEntries.push(x);
+  if(x.customer&&!db.customers.some(c=>String(c.name||'').trim().toLowerCase()===x.customer.toLowerCase()))db.customers.push({name:x.customer,mobile:'',created:x.date});
+  save();toast('✅ JCB entry submit हो गई');
+  window.jcbStep=1;window.jcbDraft=null;
+  setTimeout(()=>jcbEntry(),250);
 }
 function selectJcbVehicle(type){
   const t=type==='Tractor'?'Tractor':'Dumper';const v=document.getElementById('jcbVehicleType');if(v)v.value=t;
@@ -573,27 +619,29 @@ function viewJcbPhoto(id){
   document.body.appendChild(box);
 }
 function jcbVerification(readOnly=false){
-  db.jcbEntries??=[];db.officeEntries??[];
-  const d=window.jcbVerifyDate||today(),q=String(window.jcbVerifyCustomer||'').trim().toLowerCase(),vt=String(window.jcbVerifyVehicle||'').trim(),mat=String(window.jcbVerifyMaterial||'').trim();
-  const jrows=db.jcbEntries.filter(x=>String(x.date||'').slice(0,10)===d).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
-  const orows=db.officeEntries.filter(x=>String(x.date||'').slice(0,10)===d),offices={};orows.forEach(x=>offices[String(x.serial)]=x);
-  const allSerials=[...new Set(jrows.map(x=>String(x.serial)).concat(orows.map(x=>String(x.serial))))].sort((a,b)=>Number(a)-Number(b));
-  const rows=allSerials.map(s=>({s,j:jrows.find(x=>String(x.serial)===s),o:offices[s]})).filter(r=>(!q||String(r.j?.customer||r.o?.customer||'').toLowerCase().includes(q))&&(!vt||String(r.j?.vehicleType||r.o?.vehicleType||'')===vt)&&(!mat||String(r.j?.material||r.o?.material||'')===mat));
-  const verified=rows.filter(r=>r.j&&r.o&&String(r.j.customer||'').trim().toLowerCase()===String(r.o.customer||'').trim().toLowerCase()&&String(r.j.material||'')===String(r.o.material||'')&&String(r.j.vehicleType||'')===String(r.o.vehicleType||'')).length,mismatch=rows.filter(r=>r.j&&r.o).length-verified,pending=rows.filter(r=>r.j&&!r.o).length,officeOnly=rows.filter(r=>!r.j&&r.o).length;
-  const mats=db.settings.materials||[],byMat={};jrows.forEach(x=>{byMat[x.material]??={count:0,dumper:0,tractor:0};byMat[x.material].count++;byMat[x.material][x.vehicleType==='Tractor'?'tractor':'dumper']++});
-  const names=[...new Set(jrows.map(x=>x.customer).filter(Boolean))].sort();
-  const table=rows.map(r=>{const j=r.j,o=r.o,same=j&&o&&String(j.customer||'').trim().toLowerCase()===String(o.customer||'').trim().toLowerCase()&&String(j.material||'')===String(o.material||'')&&String(j.vehicleType||'')===String(o.vehicleType||''),status=j&&o?(same?'Verified':'Mismatch'):j?'JCB Pending Office':'Office Pending JCB',photo=j?.photo?'<button class="btn" data-id="'+esc(j._id)+'" onclick="viewJcbPhoto(this.dataset.id)">📷</button>':'—';return '<tr><td><b>'+esc(r.s)+'</b></td><td>'+esc(j?.customer||o?.customer||'')+'</td><td>'+esc(j?.vehicleType||o?.vehicleType||'')+(j?.vehicle?'<br>'+esc(j.vehicle):(o?.vehicle?'<br>'+esc(o.vehicle):''))+'</td><td>'+esc(j?.material||o?.material||'')+'</td><td>'+(j?'<span style="color:#15803d">✓</span>':'—')+'</td><td>'+(o?'<span style="color:#15803d">✓</span>':'—')+'</td><td><span class="pill '+(status==='Verified'?'cash':'udhar')+'">'+status+'</span></td><td>'+photo+'</td></tr>'}).join('');
-  document.getElementById('app').innerHTML=header('🚜 Loading Point Verification','JCB entry और Office entry को serial/date से मिलाकर verification देखें',readOnly?'':'<button class="btn" onclick="jcbEntry()">+ JCB Entry</button>')+
-  '<div class="panel no-print"><div class="grid"><div class="field"><label>तारीख</label><input type="date" id="jcbVerifyDate" value="'+d+'"></div><div class="field"><label>ग्राहक</label><input id="jcbVerifyCustomer" list="jcbVerifyNames" value="'+esc(window.jcbVerifyCustomer||'')+'" placeholder="सभी"><datalist id="jcbVerifyNames">'+names.map(n=>'<option value="'+esc(n)+'"></option>').join('')+'</datalist></div><div class="field"><label>Vehicle Type</label><select id="jcbVerifyVehicle"><option value="">सभी</option><option '+(vt==='Dumper'?'selected':'')+'>Dumper</option><option '+(vt==='Tractor'?'selected':'')+'>Tractor</option></select></div><div class="field"><label>Material</label><select id="jcbVerifyMaterial"><option value="">सभी</option>'+mats.map(m=>'<option '+(m===mat?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select></div><div class="field" style="align-self:end"><button class="btn primary" style="width:100%" onclick="window.jcbVerifyDate=document.getElementById(\'jcbVerifyDate\').value;window.jcbVerifyCustomer=document.getElementById(\'jcbVerifyCustomer\').value;window.jcbVerifyVehicle=document.getElementById(\'jcbVerifyVehicle\').value;window.jcbVerifyMaterial=document.getElementById(\'jcbVerifyMaterial\').value;jcbVerification('+readOnly+')">🔎 Report बनाएं</button></div></div></div>'+
-  '<div class="reportgrid"><div class="reportbox">JCB Entries<b>'+jrows.length+'</b></div><div class="reportbox">Verified<b>'+verified+'</b></div><div class="reportbox">Mismatch<b>'+mismatch+'</b></div><div class="reportbox">Pending<b>'+(pending+officeOnly)+'</b></div></div>'+
-  '<div class="panel"><h3>Material Wise Summary</h3><div class="tablewrap"><table><tr><th>सामग्री</th><th>कुल Loading</th><th>Dumper</th><th>Tractor</th></tr>'+mats.map(m=>'<tr><td>'+esc(m)+'</td><td>'+(byMat[m]?.count||0)+'</td><td>'+(byMat[m]?.dumper||0)+'</td><td>'+(byMat[m]?.tractor||0)+'</td></tr>').join('')+'</table></div></div>'+
-  '<div class="panel"><h3>JCB / Office Verification</h3><div class="tablewrap"><table><tr><th>Serial</th><th>Customer</th><th>Vehicle</th><th>Material</th><th>JCB Entry</th><th>Office Entry</th><th>Status</th><th>Photo</th></tr>'+(table||'<tr><td colspan="8" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>')+'</table></div></div>';
+  db.jcbEntries??=[];
+  const d=window.jcbReportDate||today();
+  const q=String(window.jcbReportCustomer||'').trim().toLowerCase();
+  const vt=String(window.jcbReportVehicle||'').trim();
+  const mat=String(window.jcbReportMaterial||'').trim();
+  const rows=db.jcbEntries.filter(x=>String(x.date||'').slice(0,10)===d)
+    .filter(x=>(!q||String(x.customer||'').toLowerCase().includes(q))&&(!vt||String(x.vehicleType||'')===vt)&&(!mat||String(x.material||'')===mat))
+    .sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
+  const mats=db.settings.materials||[],byMat={};
+  rows.forEach(x=>{byMat[x.material]??={count:0,dumper:0,tractor:0};byMat[x.material].count++;byMat[x.material][x.vehicleType==='Tractor'?'tractor':'dumper']++});
+  const names=[...new Set(db.jcbEntries.map(x=>x.customer).filter(Boolean))].sort();
+  const table=rows.map(x=>'<tr><td><b>'+esc(x.serial)+'</b></td><td>'+esc(displayTime12(x.time))+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.vehicleType)+'</td><td>'+esc(x.material)+'</td><td>'+(x.photo?'<button class="btn" data-id="'+esc(x._id)+'" onclick="viewJcbPhoto(this.dataset.id)">📷 Photo</button>':'—')+'</td></tr>').join('');
+  document.getElementById('app').innerHTML=header('🚜 JCB Loading','JCB operator द्वारा भेजी गई entries — date wise', '')+
+  '<div class="panel no-print"><div class="grid"><div class="field"><label>Date</label><input type="date" id="jcbReportDate" value="'+d+'"></div><div class="field"><label>Customer</label><input id="jcbReportCustomer" list="jcbReportNames" value="'+esc(window.jcbReportCustomer||'')+'" placeholder="सभी"><datalist id="jcbReportNames">'+names.map(n=>'<option value="'+esc(n)+'"></option>').join('')+'</datalist></div><div class="field"><label>Vehicle</label><select id="jcbReportVehicle"><option value="">सभी</option><option '+(vt==='Dumper'?'selected':'')+'>Dumper</option><option '+(vt==='Tractor'?'selected':'')+'>Tractor</option></select></div><div class="field"><label>Material</label><select id="jcbReportMaterial"><option value="">सभी</option>'+mats.map(m=>'<option '+(m===mat?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select></div><div class="field" style="align-self:end"><button class="btn primary" style="width:100%" onclick="window.jcbReportDate=document.getElementById(\'jcbReportDate\').value;window.jcbReportCustomer=document.getElementById(\'jcbReportCustomer\').value;window.jcbReportVehicle=document.getElementById(\'jcbReportVehicle\').value;window.jcbReportMaterial=document.getElementById(\'jcbReportMaterial\').value;jcbVerification(false)">🔎 देखें</button></div></div></div>'+
+  '<div class="reportgrid"><div class="reportbox">Total Entries<b>'+rows.length+'</b></div><div class="reportbox">Dumper<b>'+rows.filter(x=>x.vehicleType==='Dumper').length+'</b></div><div class="reportbox">Tractor<b>'+rows.filter(x=>x.vehicleType==='Tractor').length+'</b></div><div class="reportbox">Customers<b>'+new Set(rows.map(x=>x.customer)).size+'</b></div></div>'+
+  '<div class="panel"><h3>JCB Entries — '+esc(dmy(d))+'</h3><div class="tablewrap"><table><tr><th>Serial</th><th>Time</th><th>Customer</th><th>Vehicle</th><th>Material</th><th>Photo</th></tr>'+(table||'<tr><td colspan="6" class="empty">इस तारीख की कोई JCB entry नहीं है।</td></tr>')+'</table></div></div>'+
+  '<div class="panel"><h3>Material Wise Summary</h3><div class="tablewrap"><table><tr><th>Material</th><th>Total</th><th>Dumper</th><th>Tractor</th></tr>'+mats.map(m=>'<tr><td>'+esc(m)+'</td><td>'+(byMat[m]?.count||0)+'</td><td>'+(byMat[m]?.dumper||0)+'</td><td>'+(byMat[m]?.tractor||0)+'</td></tr>').join('')+'</table></div></div>';
 }
 
 function officeNav(){
   const el=document.getElementById("officeNav");
   if(!el)return;
-  const items=[["entry","📝 Entry"],["bharav","🚜 भराव"],["diesel","⛽ Diesel"],["verify","🚜 JCB Verify"]];
+  const items=[["entry","📝 Entry"],["bharav","🚜 भराव"],["diesel","⛽ Diesel"]];
   el.innerHTML=items.map(([id,label])=>'<button type="button" class="'+(officePage===id?'active':'')+'" onclick="goOffice(\''+id+'\')">'+label+'</button>').join('')
     +'<button type="button" class="danger" onclick="erpLogout()">🚪 Logout</button>';
 }
