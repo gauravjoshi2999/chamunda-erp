@@ -408,7 +408,7 @@ function cloudDisconnect(){
 }
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.style.display="block";setTimeout(()=>t.style.display="none",1800)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-const pages=[["dashboard","🏠","Dashboard"],["jcbverify","🚜","JCB Loading"],["sale","🚛","Sale Entry"],["customers","👥","Customers / Khata"],["bharav","🚜","भराव"],["royalty","📜","Royalty"],["diesel","⛽","Diesel"],["reports","📊","Reports"],["backup","💾","Backup"],["settings","⚙️","Settings"]];
+const pages=[["dashboard","🏠","Dashboard"],["sale","🚛","Sale Entry"],["customers","👥","Customers / Khata"],["bharav","🚜","भराव"],["royalty","📜","Royalty"],["diesel","⛽","Diesel"],["reports","📊","Reports"],["backup","💾","Backup"],["settings","⚙️","Settings"]];
 let page="dashboard";
 function nav(){document.getElementById("nav").innerHTML=pages.filter(p=>p[0]==="settings"||!(db.settings.hiddenMenus||[]).includes(p[0])).map(p=>`<button class="${page===p[0]?"active":""}" onclick="go('${p[0]}')">${p[1]} ${p[2]}</button>`).join("")}
 function go(p){page=p;nav();render()}
