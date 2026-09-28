@@ -18,7 +18,7 @@ h2{text-align:center;font-size:24px;margin:12px 0 16px}.grid{display:grid;grid-t
 </style></head>
 <body><div class="wrap"><div class="card"><div class="head"><div class="logo">🚜</div><h1>JCB Loading Entry</h1><p>Chamunda ERP</p></div><div id="sync" class="sync">⏳ तैयार हो रहा है...</div><div id="app"><div class="info">⏳ Software शुरू हो रहा है...</div></div></div></div>
 <script>
-const FIREBASE_CONFIG={apiKey:"AIzaSyDK25r1xMH5J_cZiXICR6SkPs1wfyA8iY8",authDomain:"chamunda-erp.firebaseapp.com",databaseURL:"https://chamunda-erp-default-rtdb.firebaseio.com",projectId:"chamunda-erp",storageBucket:"chamunda-erp.firebasestorage.app",messagingSenderId:"613859592512",appId:"1:613859592512:web:0ca59647db0a49d60312a5"};
+const FIREBASE_CONFIG={apiKey:"AIzaSyDK25r1xMH5J_cZiXICR6SkPslwfyA8i8Y8",authDomain:"chamunda-erp.firebaseapp.com",databaseURL:"https://chamunda-erp-default-rtdb.firebaseio.com",projectId:"chamunda-erp",storageBucket:"chamunda-erp.firebasestorage.app",messagingSenderId:"613859592512",appId:"1:613859592512:web:0ca59647db0a49d60312a5"};
 const app=document.getElementById('app'),syncBox=document.getElementById('sync');const today=()=>new Date().toISOString().slice(0,10);const dmy=d=>{const [y,m,dd]=String(d).slice(0,10).split('-');return dd+'/'+m+'/'+y};const timeNow=()=>new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let dbRef=null,materials=['6 MM','10 MM','12 MM','40 MM','Dust','WMM','भराव'],state={step:1,vehicle:'',material:''};
 
 const IDB='jcbOfflineDB',STORE='queue',LS='jcbOfflineQueue';let idb;
