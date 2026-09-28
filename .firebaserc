@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "chamunda-erp"
+  },
+  "targets": {
+    "database": {
+      "main": [
+        "chamunda-erp-default-rtdb"
+      ]
+    }
   }
 }
