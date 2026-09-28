@@ -6,7 +6,9 @@
         ".write": "auth != null",
         "jcbInbox": {
           ".write": true,
-          ".validate": "newData.hasChildren(['date','time','vehicleType','material','_id']) && newData.child('date').isString() && newData.child('time').isString() && newData.child('vehicleType').isString() && newData.child('material').isString() && newData.child('_id').isString()"
+          "$entryId": {
+            ".validate": "newData.hasChildren(['date','time','vehicleType','material','_id']) && newData.child('date').isString() && newData.child('time').isString() && newData.child('vehicleType').isString() && newData.child('material').isString() && newData.child('_id').isString()"
+          }
         }
       }
     }
