@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1769d3">
+<title>JCB Entry • Chamunda ERP</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f5f8;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#17202a}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:min(100%,520px);background:#fff;border-radius:22px;padding:20px;box-shadow:0 12px 40px #0002}
+.head{text-align:center}.logo{font-size:58px}.head h1{margin:4px 0;font-size:28px}.head p{margin:4px 0 20px;color:#64748b}
+.info{background:#eef5ff;border-radius:13px;padding:12px;text-align:center;margin-bottom:16px;font-weight:750}
+h2{text-align:center;font-size:24px;margin:12px 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{font:inherit;cursor:pointer}.choice{min-height:145px;border:2px solid #d8e1ea;border-radius:16px;background:#fff;font-size:24px;font-weight:900}.choice.selected{border-color:#1769d3;background:#eef5ff}
+.materials{display:grid;grid-template-columns:1fr 1fr;gap:9px}.material{min-height:64px;border:1px solid #cbd5df;border-radius:12px;background:#fff;font-size:18px;font-weight:800}.material.selected{background:#1769d3;color:#fff;border-color:#1769d3}
+.actions{display:flex;gap:9px;margin-top:16px}.btn{flex:1;min-height:56px;border:0;border-radius:12px;font-weight:850;font-size:18px}.back{background:#eef2f5}.submit{background:#15803d;color:#fff}
+.status{text-align:center;margin-top:12px;color:#64748b;min-height:22px}.success{background:#eaf8ef;color:#126b34;border-radius:15px;padding:18px;text-align:center;font-size:19px;font-weight:800}
+.error{background:#fff1f0;color:#a61b12;border-radius:12px;padding:12px;text-align:center;margin-top:12px}
+.hidden{display:none!important}
+@media(max-width:420px){.wrap{padding:9px}.card{padding:15px;border-radius:18px}.choice{min-height:125px;font-size:21px}.material{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+  <div class="head"><div class="logo">🚜</div><h1>JCB Loading Entry</h1><p>Chamunda ERP</p></div>
+  <div id="app">
+    <div class="info">⏳ Software connect हो रहा है...</div>
+  </div>
+</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth-compat.js"></script>
+<script>
+const FIREBASE_CONFIG={
+ apiKey:"AIzaSyDK25r1xMH5J_cZiXICR6SkPs1wfyA8iY8",
+ authDomain:"chamunda-erp.firebaseapp.com",
+ databaseURL:"https://chamunda-erp-default-rtdb.firebaseio.com",
+ projectId:"chamunda-erp",
+ storageBucket:"chamunda-erp.firebasestorage.app",
+ messagingSenderId:"613859592512",
+ appId:"1:613859592512:web:0ca59647db0a49d60312a5"
+};
+const app=document.getElementById('app');
+const today=()=>new Date().toISOString().slice(0,10);
+const dmy=d=>{const [y,m,dd]=String(d).slice(0,10).split('-');return dd+'/'+m+'/'+y};
+const timeNow=()=>new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let dbRef=null, materials=['6 MM','10 MM','12 MM','40 MM','Dust','WMM','भराव'];
+let state={step:1,vehicle:'',material:''};
+
+function render(){
+ const mats=[...new Set(materials)];
+ let html='<div class="info">आज: '+dmy(today())+'</div>';
+ if(state.step===1){
+   html+='<h2>1️⃣ गाड़ी चुनें</h2><div class="grid">';
+   html+='<button class="choice '+(state.vehicle==='Dumper'?'selected':'')+'" onclick="pickVehicle(\'Dumper\')">🚚<br><span>DUMPER</span></button>';
+   html+='<button class="choice '+(state.vehicle==='Tractor'?'selected':'')+'" onclick="pickVehicle(\'Tractor\')">🚜<br><span>TRACTOR</span></button>';
+   html+='</div>';
+ }else if(state.step===2){
+   html+='<h2>2️⃣ Material चुनें</h2><div class="materials">';
+   mats.forEach(m=>html+='<button class="material '+(state.material===m?'selected':'')+'" onclick="pickMaterial(this.dataset.m)" data-m="'+esc(m)+'">'+esc(m)+'</button>');
+   html+='</div><div class="actions"><button class="btn back" onclick="state.step=1;render()">⬅️ वापस</button></div>';
+ }else{
+   html+='<h2>3️⃣ Entry जमा करें</h2><div class="info">गाड़ी: '+esc(state.vehicle)+'<br>Material: '+esc(state.material)+'</div><div class="actions"><button class="btn back" onclick="state.step=2;render()">⬅️ वापस</button><button class="btn submit" onclick="submitEntry()">✅ SUBMIT</button></div>';
+ }
+ app.innerHTML=html;
+}
+function pickVehicle(v){state.vehicle=v;state.step=2;render()}
+function pickMaterial(m){state.material=m;state.step=3;render()}
+async function submitEntry(){
+ if(!state.vehicle||!state.material)return;
+ app.querySelectorAll('button').forEach(b=>b.disabled=true);
+ const date=today(), time=timeNow();
+ app.innerHTML='<div class="info">⏳ Entry save हो रही है...</div>';
+ try{
+   await dbRef.child('jcbEntries').transaction(current=>{
+     let arr=Array.isArray(current)?current:Object.values(current||{});
+     const serial=arr.filter(x=>String(x?.date||'').slice(0,10)===date).reduce((max,x)=>Math.max(max,Number(x?.serial)||0),0)+1;
+     arr.push({serial,date,time,customer:'',vehicleType:state.vehicle,vehicle:'',material:state.material,photo:'',status:'submitted',_id:'jcb_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)});
+     return arr;
+   });
+   app.innerHTML='<div class="success">✅ Entry जमा हो गई!<br><span style="font-size:15px;font-weight:600">अब अगली गाड़ी की entry कर सकते हैं।</span><div class="actions"><button class="btn submit" onclick="state={step:1,vehicle:\'\',material:\'\'};render()">➕ अगली Entry</button></div></div>';
+ }catch(e){
+   app.innerHTML='<div class="error">Entry save नहीं हुई। Internet check करके दोबारा कोशिश करें।</div><div class="actions"><button class="btn back" onclick="state.step=3;render()">🔄 दोबारा कोशिश</button></div>';
+ }
+}
+async function start(){
+ try{
+   firebase.initializeApp(FIREBASE_CONFIG);
+   await firebase.auth().signInAnonymously();
+   dbRef=firebase.database().ref('chamundaERP/data');
+   const snap=await dbRef.child('settings/materials').once('value');
+   const m=snap.val();
+   if(Array.isArray(m)&&m.length)materials=[...new Set(m.map(String).concat(['भराव']))];
+   render();
+ }catch(e){
+   app.innerHTML='<div class="error">Software connect नहीं हो पाया। Internet चालू करके page दोबारा खोलें।</div>';
+ }
+}
+start();
+</script>
+</body>
+</html>
