@@ -196,7 +196,7 @@ const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:
 const num=n=>Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:3});
 let db=load();try{migrate()}catch(e){console.error("ERP migrate error",e);try{db=load()}catch(_){db=blank()}}
 let userMode=localStorage.getItem("chamunda_erp_login_mode")||"";
-let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudJcbUnsub=null,cloudJcbInboxUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false,authUser=null;
+let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudJcbUnsub=null,cloudJcbInboxUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false,authUser=null;\nlet jcbCloudLastAt=Number(localStorage.getItem("chamunda_jcb_cloud_last_at")||0),jcbCloudLastId=localStorage.getItem("chamunda_jcb_cloud_last_id")||"";
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
 function blank(){return {sales:[],officeEntries:[],jcbEntries:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["6 MM","10 MM","12 MM","40 MM","Dust","WMM"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
 function migrate(){
@@ -314,6 +314,9 @@ cloudJcbInboxUnsub=cloudRef.child('jcbInbox').on('value',snap=>{
       const serial=jcbNextSerial(date);
       db.jcbEntries=db.jcbEntries||[];
       db.jcbEntries.push({...e,serial,status:'submitted'});
+      jcbCloudLastAt=Date.now();jcbCloudLastId=String(e._id||'');
+      localStorage.setItem('chamunda_jcb_cloud_last_at',String(jcbCloudLastAt));
+      localStorage.setItem('chamunda_jcb_cloud_last_id',jcbCloudLastId);
       localStorage.setItem(KEY,JSON.stringify(db));
       cloudRef.child('jcbInbox').child(key).remove().catch(()=>{});
       scheduleCloudPush();
@@ -704,6 +707,7 @@ function viewJcbPhoto(id){
   box.innerHTML='<div class="panel" style="width:min(760px,100%);max-height:94vh;overflow:auto;text-align:center"><div class="top"><h3 style="margin:0">🚜 JCB Vehicle Photo — Serial '+esc(x.serial)+'</h3><button class="btn" onclick="this.closest(\'.modal-backdrop\').remove()">✕</button></div><img src="'+x.photo+'" style="max-width:100%;max-height:72vh;border-radius:12px;object-fit:contain"><div class="muted" style="margin-top:8px">'+esc(x.customer)+' • '+esc(x.material)+' • '+esc(displayTime12(x.time))+'</div></div>';
   document.body.appendChild(box);
 }
+function jcbCloudIndicator(){const total=(db.jcbEntries||[]).length;const last=(db.jcbEntries||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.time||'').localeCompare(String(a.time||'')))[0];const lastText=jcbCloudLastAt?new Date(jcbCloudLastAt).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}):'अभी तक इस device पर cloud entry receive नहीं हुई';return '<div class="panel no-print" style="border-left:5px solid #15803d;background:#f0fdf4"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><b>☁️ JCB Mobile Sync</b><div class="muted" style="margin-top:4px">'+(cloudReady?'🟢 Live Sync Connected':'🟠 Connecting / Offline')+' • Main ERP में कुल JCB entries: <b>'+total+'</b></div><div class="muted" style="margin-top:3px">Last cloud entry received: <b>'+esc(lastText)+'</b>'+(last?' • Latest: '+esc(last.vehicleType||'')+' / '+esc(last.material||''):'')+'</div></div><button class="btn" onclick="jcbVerification(false)">🔄 Refresh</button></div></div>'}
 function jcbVerification(readOnly=false){
   db.jcbEntries??=[];
   const d=window.jcbReportDate||today();
@@ -712,7 +716,7 @@ function jcbVerification(readOnly=false){
   rows.forEach(x=>{byMat[x.material]??={count:0,dumper:0,tractor:0};byMat[x.material].count++;byMat[x.material][x.vehicleType==='Tractor'?'tractor':'dumper']++});
   const table=rows.map(x=>'<tr><td><b>'+esc(x.serial)+'</b></td><td>'+esc(displayTime12(x.time))+'</td><td>'+esc(x.vehicleType==='Tractor'?'🚜 Tractor':'🚚 Dumper')+'</td><td>'+esc(x.material)+'</td><td>'+(x.photo?'<button class="btn" data-id="'+esc(x._id)+'" onclick="viewJcbPhoto(this.dataset.id)">📷 Photo</button>':'—')+'</td><td>'+(readOnly?'—':'<button class="btn danger" data-id="'+esc(x._id)+'" onclick="deleteJcbEntry(this.dataset.id)">🗑️ Delete</button>')+'</td></tr>').join('');
   const title=d===today()?'आज की JCB Loading':'JCB Loading — '+dmy(d);
-  document.getElementById('app').innerHTML=header('🚜 JCB Loading',title,'')+
+  document.getElementById('app').innerHTML=header('🚜 JCB Loading',title,'')+jcbCloudIndicator()+
   '<div class="panel no-print" style="padding:14px"><div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap"><div class="field" style="flex:1;min-width:190px"><label>📅 जिस दिन का data देखना है</label><input type="date" id="jcbReportDate" value="'+d+'" max="'+today()+'" style="font-size:18px;min-height:48px"></div><button class="btn primary" style="min-height:48px" onclick="window.jcbReportDate=document.getElementById(\'jcbReportDate\').value||today();jcbVerification(false)">🔎 Data देखें</button><button class="btn" style="min-height:48px" onclick="window.jcbReportDate=today();jcbVerification(false)">📅 आज</button></div><div class="muted" style="margin-top:8px">एक समय में केवल चुनी हुई तारीख का data दिखेगा। पुराना data देखने के लिए calendar से तारीख बदलें।</div></div>'+
   '<div class="reportgrid"><div class="reportbox">Total Entries<b>'+rows.length+'</b></div><div class="reportbox">🚚 Dumper<b>'+rows.filter(x=>x.vehicleType==='Dumper').length+'</b></div><div class="reportbox">🚜 Tractor<b>'+rows.filter(x=>x.vehicleType==='Tractor').length+'</b></div><div class="reportbox">Customers<b>'+new Set(rows.map(x=>x.customer)).size+'</b></div></div>'+
   '<div class="panel"><h3>📋 '+esc(title)+'</h3><div class="tablewrap"><table><tr><th>Serial</th><th>Time</th><th>Vehicle</th><th>Material</th><th>Photo</th><th>Action</th></tr>'+(table||'<tr><td colspan="6" class="empty">इस तारीख की कोई JCB entry नहीं है।</td></tr>')+'</table></div></div>'+
