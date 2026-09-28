@@ -196,7 +196,8 @@ const money=n=>"₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:
 const num=n=>Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:3});
 let db=load();try{migrate()}catch(e){console.error("ERP migrate error",e);try{db=load()}catch(_){db=blank()}}
 let userMode=localStorage.getItem("chamunda_erp_login_mode")||"";
-let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudJcbUnsub=null,cloudJcbInboxUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false,authUser=null;\nlet jcbCloudLastAt=Number(localStorage.getItem("chamunda_jcb_cloud_last_at")||0),jcbCloudLastId=localStorage.getItem("chamunda_jcb_cloud_last_id")||"";
+let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudJcbUnsub=null,cloudJcbInboxUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false,authUser=null;
+let jcbCloudLastAt=Number(localStorage.getItem("chamunda_jcb_cloud_last_at")||0),jcbCloudLastId=localStorage.getItem("chamunda_jcb_cloud_last_id")||"";
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
 function blank(){return {sales:[],officeEntries:[],jcbEntries:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["6 MM","10 MM","12 MM","40 MM","Dust","WMM"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
 function migrate(){
