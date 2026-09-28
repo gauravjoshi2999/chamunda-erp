@@ -89,7 +89,7 @@ input,select,textarea{max-width:100%}
   background:linear-gradient(135deg,#ffb300,#ff7a00)!important;color:#fff!important;
   border-radius:18px!important;box-shadow:0 8px 24px rgba(255,145,0,.28)!important;
 }
-#loginGate .profile-grid{max-width:560px!important;margin:18px auto 0!important;grid-template-columns:1fr 1fr!important;gap:16px!important}
+#loginGate .profile-grid{max-width:900px!important;margin:18px auto 0!important;grid-template-columns:repeat(3,1fr)!important;gap:12px!important}
 #loginGate .profile-card{
   min-height:190px!important;text-align:center!important;display:flex!important;flex-direction:column!important;
   align-items:center!important;justify-content:center!important;background:rgba(255,255,255,.96)!important;
@@ -131,7 +131,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
       <div class="login-heading">Welcome back</div><div class="login-subtitle">Login करने के लिए अपना profile चुनें</div>
       <div class="profile-grid">
         <button type="button" class="profile-card main-profile" onclick="showAdminLogin()"><div class="avatar avatar-main">👨‍💼</div><div class="profile-title">Main Login</div><div class="profile-desc">Admin / Main Dashboard</div><div class="profile-arrow">→</div></button>
-        <button type="button" class="profile-card office-profile" onclick="showOfficeLogin()"><div class="avatar avatar-office">👷</div><div class="profile-title">Office Login</div><div class="profile-desc">Entry / Bharav / Diesel</div><div class="profile-arrow">→</div></button>
+        <button type="button" class="profile-card office-profile" onclick="showOfficeLogin()"><div class="avatar avatar-office">👷</div><div class="profile-title">Office Login</div><div class="profile-desc">Entry / Bharav / Diesel</div><div class="profile-arrow">→</div></button><button type="button" class="profile-card jcb-profile" onclick="showJcbLogin()"><div class="avatar" style="background:#e9f7ef">🚜</div><div class="profile-title">JCB Login</div><div class="profile-desc">Loading Point Verification</div><div class="profile-arrow">→</div></button>
       </div>
       <div class="login-footer">🔒 Secure access • Chamunda ERP</div>
     </div>
@@ -161,6 +161,20 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   </div>
 </div>
 </div>
+<div id="jcbLoginGate" style="display:none">
+  <div class="login-shell">
+    <div class="login-brand"><div class="login-logo">🚜</div><h1>JCB Verification</h1><p>Loading Point Entry</p></div>
+    <button type="button" class="back-login" onclick="showLogin()">← Profiles पर वापस जाएँ</button>
+    <div class="login-heading">JCB Login</div><div class="login-subtitle">JCB / Loading Point staff के लिए login करें</div>
+    <div class="login-card">
+      <div class="office-login-avatar">🚜</div>
+      <div class="notice">Default JCB login: Username <b>jcb</b> और Password <b>123</b></div>
+      <div class="field"><label>Username</label><input id="jcbLoginEmail" type="text" value="jcb" autocomplete="username" placeholder="Username"></div>
+      <div class="field"><label>Password</label><input id="jcbLoginPassword" type="password" value="123" autocomplete="current-password" placeholder="Password"></div>
+      <button class="btn green" style="margin-top:12px;width:100%" onclick="erpLogin('jcb')">🚜 JCB Login</button><p class="muted" id="jcbLoginStatus"></p>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 const KEY="chamunda_erp_v1";
@@ -184,11 +198,12 @@ let db=load();try{migrate()}catch(e){console.error("ERP migrate error",e);try{db
 let userMode=localStorage.getItem("chamunda_erp_login_mode")||"";
 let cloudApp=null,cloudRef=null,cloudUnsub=null,cloudWriting=false,cloudPushTimer=null,cloudReady=false,cloudInitInProgress=false,authUser=null;
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){return blank()}}
-function blank(){return {sales:[],officeEntries:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["6 MM","10 MM","12 MM","40 MM","Dust","WMM"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
+function blank(){return {sales:[],officeEntries:[],jcbEntries:[],customers:[],customerPayments:[],bharav:[],royalty:[],dieselIn:[],settings:{materials:["6 MM","10 MM","12 MM","40 MM","Dust","WMM"],bharavRate:150,cloudSync:{enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"}}}}
 function migrate(){
   if(!db||typeof db!=='object')db=blank();
   if(!Array.isArray(db.sales))db.sales=[];
   if(!Array.isArray(db.officeEntries))db.officeEntries=[];
+  if(!Array.isArray(db.jcbEntries))db.jcbEntries=[];
   if(!Array.isArray(db.customers))db.customers=[];
   if(!Array.isArray(db.customerPayments))db.customerPayments=[];
   if(!Array.isArray(db.customerAdjustments))db.customerAdjustments=[];
@@ -196,7 +211,7 @@ function migrate(){
   if(!Array.isArray(db.bharav))db.bharav=[];
   if(!Array.isArray(db.bharavPayments))db.bharavPayments=[];
   if(!Array.isArray(db.royalty))db.royalty=[];
-  db.settings??={};db.settings.officeSubmittedDates??=[];db.officeEntries.forEach((x,i)=>{x._id??="office_"+(x.serial||i+1)+"_"+(x.date||today())+"_"+i});db.sales.forEach((x,i)=>{x._id??=`sale_${x.serial||i+1}_${x.date||today()}_${i}`});
+  db.settings??={};db.settings.officeSubmittedDates??=[];db.jcbEntries.forEach((x,i)=>{x._id??="jcb_"+(x.serial||i+1)+"_"+(x.date||today())+"_"+i});db.officeEntries.forEach((x,i)=>{x._id??="office_"+(x.serial||i+1)+"_"+(x.date||today())+"_"+i});db.sales.forEach((x,i)=>{x._id??=`sale_${x.serial||i+1}_${x.date||today()}_${i}`});
   db.customers??=[];db.customerPayments??=[];db.customerAdjustments??=[];db.settings??={};if(!db.settings.gauravOpeningBalanceSeeded){let g=db.customers.find(c=>String(c?.name||'').trim().toLowerCase()==='gaurav');if(!g){db.customers.push({name:'Gaurav',mobile:'',created:today(),openingBalance:100000});}else if(g.openingBalance==null){g.openingBalance=100000;}db.settings.gauravOpeningBalanceSeeded=true;}db.dieselIn??=[];db.bharav??=[];db.bharavPayments??=[];db.royalty??=[];db.settings??={};db.settings.materials=["6 MM","10 MM","12 MM","40 MM","Dust","WMM"];db.settings.bharavRate??=150;db.settings.requiredFields??={};db.settings.hiddenMenus??=[];db.settings.customFields??=[];db.settings.cloudSync??={enabled:true,config:BUILTIN_FIREBASE_CONFIG,path:"chamundaERP/data"};db.settings.cloudSync.path??="chamundaERP/data";db.settings.cloudSync.config??=BUILTIN_FIREBASE_CONFIG;db.settings.cloudSync.enabled??=true;localStorage.setItem(KEY,JSON.stringify(db))}
 function save(){localStorage.setItem(KEY,JSON.stringify(db)); if(db.settings?.cloudSync?.enabled && !cloudWriting) scheduleCloudPush()}
 function cloudStatus(msg,ok=false){let el=document.getElementById('cloudStatus');if(el){el.textContent=msg;el.style.color=ok?'#15803d':'#b45309'}}
@@ -205,18 +220,19 @@ function readInput(id,fallback=''){
   return el ? String(el.value ?? '').trim() : fallback;
 }
 function showLogin(){
- const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');
- if(g)g.style.display='flex'; if(o)o.style.display='none'; if(a)a.style.display='none'; if(s)s.style.display='none';
+ const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),j=document.getElementById('jcbLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');
+ if(g)g.style.display='flex'; if(o)o.style.display='none'; if(j)j.style.display='none'; if(a)a.style.display='none'; if(s)s.style.display='none';
  const c=document.getElementById('loginChooser'),ad=document.getElementById('adminLoginForm'); if(c)c.style.display='block'; if(ad)ad.style.display='none';
 }
 function showAdminLogin(){
- const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');
+ const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),j=document.getElementById('jcbLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');
  if(g)g.style.display='flex'; if(o)o.style.display='none'; if(a)a.style.display='none'; if(s)s.style.display='none';
  const c=document.getElementById('loginChooser'),ad=document.getElementById('adminLoginForm'); if(c)c.style.display='none'; if(ad)ad.style.display='block';
 }
-function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='flex';if(a)a.style.display='none';if(s)s.style.display='none';}
-function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='none';if(a)a.style.display='block';if(s)s.style.display=userMode==='office'?'none':'';}
-function erpLogin(mode='admin'){const office=mode==='office',st=document.getElementById(office?'officeLoginStatus':'loginStatus');if(!window.firebase||!firebase.auth){if(st)st.textContent="Firebase connect हो रहा है...";loadFirebaseSdk().then(()=>erpLogin(mode)).catch(e=>{if(st)st.textContent="Internet connection/Firebase load check करें";});return;}if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';localStorage.setItem("chamunda_erp_login_mode","office");officePage='entry';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';localStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
+function showOfficeLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),j=document.getElementById('jcbLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='flex';if(j)j.style.display='none';if(a)a.style.display='none';if(s)s.style.display='none';}
+function showJcbLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),j=document.getElementById('jcbLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='none';if(j)j.style.display='flex';if(a)a.style.display='none';if(s)s.style.display='none';}
+function hideLogin(){const g=document.getElementById('loginGate'),o=document.getElementById('officeLoginGate'),j=document.getElementById('jcbLoginGate'),a=document.getElementById('app'),s=document.querySelector('.side');if(g)g.style.display='none';if(o)o.style.display='none';if(j)j.style.display='none';if(a)a.style.display='block';if(s)s.style.display=(userMode==='office'||userMode==='jcb')?'none':'';}
+function erpLogin(mode='admin'){const office=mode==='office',jcb=mode==='jcb',st=document.getElementById(office?'officeLoginStatus':jcb?'jcbLoginStatus':'loginStatus');if(!window.firebase||!firebase.auth){if(st)st.textContent="Firebase connect हो रहा है...";loadFirebaseSdk().then(()=>erpLogin(mode)).catch(e=>{if(st)st.textContent="Internet connection/Firebase load check करें";});return;}if(office){const username=String(document.getElementById('officeLoginEmail')?.value||'').trim(),password=String(document.getElementById('officeLoginPassword')?.value||'');if(username!=='admin'||password!=='123'){if(st)st.textContent='Username admin और Password 123 डालें';return;}if(st)st.textContent='Office Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='office';localStorage.setItem("chamunda_erp_login_mode","office");officePage='entry';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Office login failed: '+(e.code||'Anonymous Login बंद है');});return;}if(jcb){const username=String(document.getElementById('jcbLoginEmail')?.value||'').trim(),password=String(document.getElementById('jcbLoginPassword')?.value||'');if(username!=='jcb'||password!=='123'){if(st)st.textContent='Username jcb और Password 123 डालें';return;}if(st)st.textContent='JCB Login हो रहा है...';firebase.auth().signInAnonymously().then(u=>{authUser=u.user||u;userMode='jcb';localStorage.setItem("chamunda_erp_login_mode","jcb");officePage='jcb';sessionStorage.setItem("chamunda_office_page",officePage);hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='JCB login failed: '+(e.code||'Anonymous Login बंद है');});return;}const email=String(document.getElementById('loginEmail')?.value||'').trim(),password=String(document.getElementById('loginPassword')?.value||'');if(!email||!password){if(st)st.textContent='Login details भरें';return;}if(st)st.textContent='Login हो रहा है...';firebase.auth().signInWithEmailAndPassword(email,password).then(u=>{authUser=u.user;userMode='admin';localStorage.setItem("chamunda_erp_login_mode",'admin');hideLogin();initCloud();render();}).catch(e=>{if(st)st.textContent='Login failed: '+(e.code||'गलत login details');});}
 function erpLogout(){
   try{clearTimeout(cloudPushTimer);}catch(e){}
   try{if(cloudUnsub){cloudUnsub();cloudUnsub=null;}}catch(e){}
@@ -334,7 +350,7 @@ function cloudDisconnect(){
 }
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.style.display="block";setTimeout(()=>t.style.display="none",1800)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-const pages=[["dashboard","🏠","Dashboard"],["sale","🚛","Sale Entry"],["customers","👥","Customers / Khata"],["bharav","🚜","भराव"],["royalty","📜","Royalty"],["diesel","⛽","Diesel"],["reports","📊","Reports"],["backup","💾","Backup"],["settings","⚙️","Settings"]];
+const pages=[["dashboard","🏠","Dashboard"],["jcbverify","🚜","JCB Verification"],["sale","🚛","Sale Entry"],["customers","👥","Customers / Khata"],["bharav","🚜","भराव"],["royalty","📜","Royalty"],["diesel","⛽","Diesel"],["reports","📊","Reports"],["backup","💾","Backup"],["settings","⚙️","Settings"]];
 let page="dashboard";
 function nav(){document.getElementById("nav").innerHTML=pages.filter(p=>p[0]==="settings"||!(db.settings.hiddenMenus||[]).includes(p[0])).map(p=>`<button class="${page===p[0]?"active":""}" onclick="go('${p[0]}')">${p[1]} ${p[2]}</button>`).join("")}
 function go(p){page=p;nav();render()}
@@ -344,7 +360,7 @@ function header(title,sub,button=""){return `<div class="top"><div><div class="t
 function render(){try{
  const side=document.querySelector('.side'),main=document.querySelector('.main');
  const isMobile=window.matchMedia && window.matchMedia('(max-width:720px)').matches;
- if(userMode==='office'){
+ if(userMode==='office'||userMode==='jcb'){
    if(side)side.style.display='none';
    if(main){
      main.style.marginLeft='0';
@@ -352,7 +368,7 @@ function render(){try{
      main.style.maxWidth='none';
      main.style.padding=isMobile?'10px 9px 82px':'14px';
    }
-   if(officePage==='bharav')officeBharav();else if(officePage==='diesel')officeDiesel();else officeEntry();return;
+   if(userMode==='jcb')jcbEntry();else if(officePage==='bharav')officeBharav();else if(officePage==='diesel')officeDiesel();else if(officePage==='verify')jcbVerification(true);else officeEntry();return;
  }
  if(side)side.style.display='';
  if(main){
@@ -362,7 +378,7 @@ function render(){try{
    main.style.padding=isMobile?'10px 9px 82px':'20px';
  }
  nav();
- if(page==="dashboard")dash();else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup();
+ if(page==="dashboard")dash();else if(page==="jcbverify")jcbVerification(false);else if(page==="sale")sale();else if(page==="customers")customers();else if(page==="bharav")bharav();else if(page==="royalty")royalty();else if(page==="diesel")diesel();else if(page==="reports")reports();else if(page==="settings")settings();else backup();
 }catch(e){console.error('ERP render error',e);const app=document.getElementById('app');if(app)app.innerHTML='<div class="panel"><h3>⚠️ ERP Load Error</h3><div class="notice">Software load करते समय समस्या आई। कृपया एक बार Refresh करें।</div><div class="muted">'+esc(e?.message||e)+'</div></div>';}}
 function req(name){return (db.settings.requiredFields||{})[name]===false?"":"required"}
 function normalizeWeight(raw){let s=String(raw??'').trim().replace(/\s+/g,'');if(!s)return null;s=s.replace(/,/g,'');const n=Number(s);if(!Number.isFinite(n)||n<=0)return null;if(n>=1000)return Number((n/1000).toFixed(3));return Number(n.toFixed(3))}
@@ -484,10 +500,100 @@ async function sendOfficeDayWhatsApp(date){
   }
 }
 
+function jcbNextSerial(date){
+  const d=String(date||today()).slice(0,10);
+  const a=(db.jcbEntries||[]).filter(x=>String(x.date||'').slice(0,10)===d).map(x=>Number(x.serial)||0);
+  const b=(db.officeEntries||[]).filter(x=>String(x.date||'').slice(0,10)===d).map(x=>Number(x.serial)||0);
+  return Math.max(0,...a,...b)+1;
+}
+function compressJcbPhoto(file){
+  return new Promise((resolve,reject)=>{
+    if(!file){resolve('');return}
+    if(!file.type.startsWith('image/')){reject(new Error('सिर्फ image photo चुनें'));return}
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const max=1000,scale=Math.min(1,max/Math.max(img.width,img.height));
+        const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+        const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',0.68));
+      };
+      img.onerror=()=>reject(new Error('Photo read नहीं हो पाई'));img.src=r.result;
+    };
+    r.onerror=()=>reject(new Error('Photo read नहीं हो पाई'));r.readAsDataURL(file);
+  });
+}
+function jcbNav(){
+  const el=document.getElementById('jcbNav');if(!el)return;
+  el.innerHTML='<button type="button" class="active">🚜 New Entry</button><button type="button" onclick="jcbVerification(true)">📋 आज की Verification</button><button type="button" class="danger" onclick="erpLogout()">🚪 Logout</button>';
+}
+function jcbEntry(){
+  db.jcbEntries??=[];
+  const d=today(),serial=jcbNextSerial(d),mats=db.settings.materials||[];
+  document.getElementById('app').innerHTML='<div class="office-nav" id="jcbNav"></div>'+
+  header('🚜 JCB Loading Point Verification','Dumper / Tractor आने पर केवल आसान entry और photo लें','')+
+  '<div class="notice"><b>JCB वाले को सिर्फ button दबाने हैं:</b> Serial अपने-आप आएगा → Customer चुनें/लिखें → Vehicle Type → Material → Photo → Save.</div>'+
+  '<div class="panel"><h3>नई JCB Entry</h3><form id="jcbEntryForm"><div class="grid">'+
+  field('Serial Number','serial','number',serial,'','readonly')+
+  field('Date','date','date',d,'','required')+
+  field('Time','time','time',currentTime(),'','required')+
+  (()=>{const names=[...new Set((db.customers||[]).map(c=>String(c?.name||'').trim()).concat((db.sales||[]).map(x=>String(x?.customer||'').trim())).filter(Boolean))].sort((a,b)=>a.localeCompare(b));return '<div class="field"><label>Customer Name</label><input name="customer" list="jcbCustomers" type="text" required placeholder="Customer का नाम"><datalist id="jcbCustomers">'+names.map(n=>'<option value="'+esc(n)+'"></option>').join('')+'</datalist></div>'})()+
+  '<div class="field"><label>Vehicle Type</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" class="btn primary" id="jcbDumperBtn" onclick="selectJcbVehicle(\'Dumper\')">🚚 Dumper</button><button type="button" class="btn" id="jcbTractorBtn" onclick="selectJcbVehicle(\'Tractor\')">🚜 Tractor</button></div><input type="hidden" name="vehicleType" id="jcbVehicleType" value="Dumper"></div>'+
+  '<div class="field" id="jcbVehicleWrap"><label>Vehicle Number</label><input name="vehicle" id="jcbVehicle" type="text" placeholder="Dumper vehicle number"></div>'+
+  '<div class="field"><label>Material / Product</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">'+mats.map((m,i)=>'<button type="button" class="btn '+(i===0?'primary':'')+'" data-material="'+esc(m)+'" onclick="selectJcbMaterial(this.dataset.material)">'+esc(m)+'</button>').join('')+'</div><input type="hidden" name="material" id="jcbMaterial" value="'+esc(mats[0]||'')+'"></div>'+
+  '<div class="field"><label>गाड़ी की Photo</label><input id="jcbPhoto" name="photo" type="file" accept="image/*" capture="environment" required><div id="jcbPhotoPreview" class="muted" style="margin-top:7px">Photo लेना जरूरी है।</div></div>'+
+  '</div><div class="actions"><button class="btn green" type="submit" style="min-width:180px">✓ जमा करें</button><button class="btn" type="button" onclick="jcbEntry()">Clear</button></div></form></div>'+
+  '<div class="panel"><h3>आज की JCB Entries</h3><div class="tablewrap"><table><tr><th>Serial</th><th>Time</th><th>Customer</th><th>Vehicle</th><th>Material</th><th>Photo</th></tr>'+
+  ((db.jcbEntries||[]).filter(x=>x.date===d).sort((a,b)=>Number(a.serial)-Number(b.serial)).map(x=>'<tr><td>'+esc(x.serial)+'</td><td>'+esc(displayTime12(x.time))+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.vehicleType)+(x.vehicle?'<br>'+esc(x.vehicle):'')+'</td><td>'+esc(x.material)+'</td><td>'+(x.photo?'<button class="btn" data-id="'+esc(x._id)+'" onclick="viewJcbPhoto(this.dataset.id)">📷 देखें</button>':'-')+'</td></tr>').join('')||'<tr><td colspan="6" class="empty">आज अभी कोई JCB entry नहीं है।</td></tr>')+
+  '</table></div></div>';
+  jcbNav();selectJcbVehicle('Dumper');selectJcbMaterial(mats[0]||'');
+  const pf=document.getElementById('jcbPhoto');if(pf)pf.onchange=()=>{const file=pf.files?.[0];document.getElementById('jcbPhotoPreview').textContent=file?file.name+' — Photo ready':'Photo लेना जरूरी है';};
+  document.getElementById('jcbEntryForm').onsubmit=async e=>{
+    e.preventDefault();const form=e.currentTarget;if(!form.reportValidity())return;
+    const file=document.getElementById('jcbPhoto')?.files?.[0];if(!file)return alert('गाड़ी की photo लेना जरूरी है');
+    const x=Object.fromEntries(new FormData(form));x.serial=Number(x.serial);x.date=x.date||today();x.time=x.time||currentTime();x.customer=x.customer.trim();x.vehicleType=x.vehicleType||'Dumper';x.vehicle=x.vehicleType==='Dumper'?(x.vehicle||'').trim():'';x.material=x.material||mats[0]||'';x.photo=await compressJcbPhoto(file);x.status='pending';x._id='jcb_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    if(x.vehicleType==='Dumper'&&!x.vehicle){alert('Dumper का vehicle number डालें');return}
+    db.jcbEntries.push(x);if(x.customer&&!db.customers.some(c=>String(c.name||'').trim().toLowerCase()===x.customer.toLowerCase()))db.customers.push({name:x.customer,mobile:'',created:x.date});save();toast('JCB entry save हो गई');jcbEntry();
+  };
+}
+function selectJcbVehicle(type){
+  const t=type==='Tractor'?'Tractor':'Dumper';const v=document.getElementById('jcbVehicleType');if(v)v.value=t;
+  const wrap=document.getElementById('jcbVehicleWrap'),input=document.getElementById('jcbVehicle'),dbtn=document.getElementById('jcbDumperBtn'),tbtn=document.getElementById('jcbTractorBtn');
+  if(wrap)wrap.style.display=t==='Dumper'?'block':'none';if(input)input.required=t==='Dumper';if(dbtn)dbtn.className='btn '+(t==='Dumper'?'primary':'');if(tbtn)tbtn.className='btn '+(t==='Tractor'?'primary':'');
+}
+function selectJcbMaterial(material){
+  const m=document.getElementById('jcbMaterial');if(m)m.value=material;
+  document.querySelectorAll('[data-material]').forEach(b=>b.classList.toggle('primary',b.dataset.material===material));
+}
+function viewJcbPhoto(id){
+  const x=(db.jcbEntries||[]).find(r=>r._id===id);if(!x?.photo)return;
+  const box=document.createElement('div');box.className='modal-backdrop';box.style.cssText='position:fixed;inset:0;background:#000b;z-index:999;display:grid;place-items:center;padding:12px';
+  box.innerHTML='<div class="panel" style="width:min(760px,100%);max-height:94vh;overflow:auto;text-align:center"><div class="top"><h3 style="margin:0">🚜 JCB Vehicle Photo — Serial '+esc(x.serial)+'</h3><button class="btn" onclick="this.closest(\'.modal-backdrop\').remove()">✕</button></div><img src="'+x.photo+'" style="max-width:100%;max-height:72vh;border-radius:12px;object-fit:contain"><div class="muted" style="margin-top:8px">'+esc(x.customer)+' • '+esc(x.material)+' • '+esc(displayTime12(x.time))+'</div></div>';
+  document.body.appendChild(box);
+}
+function jcbVerification(readOnly=false){
+  db.jcbEntries??=[];db.officeEntries??[];
+  const d=window.jcbVerifyDate||today(),q=String(window.jcbVerifyCustomer||'').trim().toLowerCase(),vt=String(window.jcbVerifyVehicle||'').trim(),mat=String(window.jcbVerifyMaterial||'').trim();
+  const jrows=db.jcbEntries.filter(x=>String(x.date||'').slice(0,10)===d).sort((a,b)=>Number(a.serial||0)-Number(b.serial||0));
+  const orows=db.officeEntries.filter(x=>String(x.date||'').slice(0,10)===d),offices={};orows.forEach(x=>offices[String(x.serial)]=x);
+  const allSerials=[...new Set(jrows.map(x=>String(x.serial)).concat(orows.map(x=>String(x.serial))))].sort((a,b)=>Number(a)-Number(b));
+  const rows=allSerials.map(s=>({s,j:jrows.find(x=>String(x.serial)===s),o:offices[s]})).filter(r=>(!q||String(r.j?.customer||r.o?.customer||'').toLowerCase().includes(q))&&(!vt||String(r.j?.vehicleType||r.o?.vehicleType||'')===vt)&&(!mat||String(r.j?.material||r.o?.material||'')===mat));
+  const verified=rows.filter(r=>r.j&&r.o).length,pending=rows.filter(r=>r.j&&!r.o).length,officeOnly=rows.filter(r=>!r.j&&r.o).length;
+  const mats=db.settings.materials||[],byMat={};jrows.forEach(x=>{byMat[x.material]??={count:0,dumper:0,tractor:0};byMat[x.material].count++;byMat[x.material][x.vehicleType==='Tractor'?'tractor':'dumper']++});
+  const names=[...new Set(jrows.map(x=>x.customer).filter(Boolean))].sort();
+  const table=rows.map(r=>{const j=r.j,o=r.o,status=j&&o?'Verified':j?'JCB Pending Office':'Office Pending JCB',photo=j?.photo?'<button class="btn" data-id="'+esc(j._id)+'" onclick="viewJcbPhoto(this.dataset.id)">📷</button>':'—';return '<tr><td><b>'+esc(r.s)+'</b></td><td>'+esc(j?.customer||o?.customer||'')+'</td><td>'+esc(j?.vehicleType||o?.vehicleType||'')+(j?.vehicle?'<br>'+esc(j.vehicle):(o?.vehicle?'<br>'+esc(o.vehicle):''))+'</td><td>'+esc(j?.material||o?.material||'')+'</td><td>'+(j?'<span style="color:#15803d">✓</span>':'—')+'</td><td>'+(o?'<span style="color:#15803d">✓</span>':'—')+'</td><td><span class="pill '+(status==='Verified'?'cash':'udhar')+'">'+status+'</span></td><td>'+photo+'</td></tr>'}).join('');
+  document.getElementById('app').innerHTML=header('🚜 Loading Point Verification','JCB entry और Office entry को serial/date से मिलाकर verification देखें',readOnly?'':'<button class="btn" onclick="jcbEntry()">+ JCB Entry</button>')+
+  '<div class="panel no-print"><div class="grid"><div class="field"><label>तारीख</label><input type="date" id="jcbVerifyDate" value="'+d+'"></div><div class="field"><label>ग्राहक</label><input id="jcbVerifyCustomer" list="jcbVerifyNames" value="'+esc(window.jcbVerifyCustomer||'')+'" placeholder="सभी"><datalist id="jcbVerifyNames">'+names.map(n=>'<option value="'+esc(n)+'"></option>').join('')+'</datalist></div><div class="field"><label>Vehicle Type</label><select id="jcbVerifyVehicle"><option value="">सभी</option><option '+(vt==='Dumper'?'selected':'')+'>Dumper</option><option '+(vt==='Tractor'?'selected':'')+'>Tractor</option></select></div><div class="field"><label>Material</label><select id="jcbVerifyMaterial"><option value="">सभी</option>'+mats.map(m=>'<option '+(m===mat?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select></div><div class="field" style="align-self:end"><button class="btn primary" style="width:100%" onclick="window.jcbVerifyDate=document.getElementById(\'jcbVerifyDate\').value;window.jcbVerifyCustomer=document.getElementById(\'jcbVerifyCustomer\').value;window.jcbVerifyVehicle=document.getElementById(\'jcbVerifyVehicle\').value;window.jcbVerifyMaterial=document.getElementById(\'jcbVerifyMaterial\').value;jcbVerification('+readOnly+')">🔎 Report बनाएं</button></div></div></div>'+
+  '<div class="reportgrid"><div class="reportbox">JCB Entries<b>'+jrows.length+'</b></div><div class="reportbox">Verified<b>'+verified+'</b></div><div class="reportbox">Pending Office<b>'+pending+'</b></div><div class="reportbox">Pending JCB<b>'+officeOnly+'</b></div></div>'+
+  '<div class="panel"><h3>Material Wise Summary</h3><div class="tablewrap"><table><tr><th>सामग्री</th><th>कुल Loading</th><th>Dumper</th><th>Tractor</th></tr>'+mats.map(m=>'<tr><td>'+esc(m)+'</td><td>'+(byMat[m]?.count||0)+'</td><td>'+(byMat[m]?.dumper||0)+'</td><td>'+(byMat[m]?.tractor||0)+'</td></tr>').join('')+'</table></div></div>'+
+  '<div class="panel"><h3>JCB / Office Verification</h3><div class="tablewrap"><table><tr><th>Serial</th><th>Customer</th><th>Vehicle</th><th>Material</th><th>JCB Entry</th><th>Office Entry</th><th>Status</th><th>Photo</th></tr>'+(table||'<tr><td colspan="8" class="empty">इस तारीख की कोई entry नहीं है।</td></tr>')+'</table></div></div>';
+}
+
 function officeNav(){
   const el=document.getElementById("officeNav");
   if(!el)return;
-  const items=[["entry","📝 Entry"],["bharav","🚜 भराव"],["diesel","⛽ Diesel"]];
+  const items=[["entry","📝 Entry"],["bharav","🚜 भराव"],["diesel","⛽ Diesel"],["verify","🚜 JCB Verify"]];
   el.innerHTML=items.map(([id,label])=>'<button type="button" class="'+(officePage===id?'active':'')+'" onclick="goOffice(\''+id+'\')">'+label+'</button>').join('')
     +'<button type="button" class="danger" onclick="erpLogout()">🚪 Logout</button>';
 }
@@ -815,10 +921,10 @@ function diesel(){let vehicles=[...new Set(db.dieselIn.filter(x=>x.sourceType===
 `<div class="panel"><h3>इस महीने का Diesel Summary</h3><div class="tablewrap"><table><tr><th>Source</th><th>Vehicle / Drum</th><th>Total Litres</th><th>Total Amount</th></tr>${dieselMonthRows()}</table></div></div>`;
 const f=document.getElementById('dinForm'),type=f.elements.sourceType,vw=document.getElementById('dinVehicleWrap'),vi=document.getElementById('dinVehicle'),drums=f.elements.drums,lit=f.elements.litres,rate=f.elements.rate,amt=f.elements.amount;function syncDiesel(){let isV=type.value==='Vehicle';vw.style.display=isV?'block':'none';vi.required=isV;drums.required=!isV;if(!isV)vi.value='';if(isV)drums.value=''}function calc(){amt.value=Number(((+lit.value||0)*(+rate.value||0)).toFixed(2))||''}type.onchange=syncDiesel;lit.oninput=calc;rate.oninput=calc;syncDiesel();f.onsubmit=e=>{e.preventDefault();if(!e.target.reportValidity())return;let x=Object.fromEntries(new FormData(e.target));x.litres=+x.litres;x.drums=x.sourceType==='Drum'?+x.drums:0;x.rate=+x.rate;x.amount=Number((x.litres*x.rate).toFixed(2));if(x.sourceType==='Vehicle')x.vehicle=x.vehicle.trim();else x.vehicle='';db.dieselIn.push(x);save();toast('Diesel save हो गया');diesel()}}
 function dieselMonthRows(){let m=today().slice(0,7),rows=[];let drums=db.dieselIn.filter(x=>x.date.startsWith(m)&&x.sourceType==='Drum');let vehicles={};drums.length&&rows.push(`<tr><td>Drum</td><td>${drums.reduce((a,x)=>a+(+x.drums||0),0)} Drum</td><td>${num(drums.reduce((a,x)=>a+(+x.litres||0),0))} L</td><td>${money(drums.reduce((a,x)=>a+(+x.amount||0),0))}</td></tr>`);db.dieselIn.filter(x=>x.date.startsWith(m)&&x.sourceType==='Vehicle').forEach(x=>{vehicles[x.vehicle]??={l:0,a:0};vehicles[x.vehicle].l+=+x.litres||0;vehicles[x.vehicle].a+=+x.amount||0});Object.entries(vehicles).forEach(([v,r])=>rows.push(`<tr><td>Vehicle</td><td>${esc(v)}</td><td>${num(r.l)} L</td><td>${money(r.a)}</td></tr>`));return rows.join('')||'<tr><td colspan="4">इस महीने अभी Diesel entry नहीं है।</td></tr>'}
-function reports(d=today()){let sales=db.sales.filter(x=>x.date===d),by={};sales.forEach(x=>{by[x.material]??={w:0,t:0};by[x.material].w+=+x.weight||0;by[x.material].t+=+x.total||0});let cash=sales.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(+x.total||0),0),udhar=sales.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(+x.total||0),0),bt=db.bharav.filter(x=>x.date===d).reduce((a,x)=>a+(+x.tractors||0),0);document.getElementById('app').innerHTML=header('Daily Report','किसी भी तारीख की report और PDF',`<button class="btn primary" onclick="window.print()">📄 Final PDF / Print</button>`)+
+function reports(d=today()){let sales=db.sales.filter(x=>x.date===d),jcb=db.jcbEntries.filter(x=>String(x.date||"").slice(0,10)===d),by={};sales.forEach(x=>{by[x.material]??={w:0,t:0};by[x.material].w+=+x.weight||0;by[x.material].t+=+x.total||0});let cash=sales.filter(x=>x.payment==='Cash').reduce((a,x)=>a+(+x.total||0),0),udhar=sales.filter(x=>x.payment==='Udhar').reduce((a,x)=>a+(+x.total||0),0),bt=db.bharav.filter(x=>x.date===d).reduce((a,x)=>a+(+x.tractors||0),0);document.getElementById('app').innerHTML=header('Daily Report','किसी भी तारीख की report और PDF',`<button class="btn primary" onclick="window.print()">📄 Final PDF / Print</button>`)+
 `<div class="panel no-print"><div class="grid"><div class="field"><label>Report Date (DD/MM/YYYY)</label><input type="date" id="reportDate" value="${d}"></div><div class="field" style="align-self:end"><button class="btn green" onclick="reports(document.getElementById('reportDate').value)">Report दिखाएँ</button></div></div></div><div class="panel"><div class="notice"><b>Report Date:</b> ${d}<br>PDF में Sale की हर entry के लिए <b>Customer Name, Weight, Material, Rate और Total</b> दिखेगा।</div><h3>Daily Sale Register</h3><div class="tablewrap"><table><tr><th>Customer Name</th><th>Weight</th><th>Material</th><th>Rate</th><th>Total</th></tr>${sales.map(x=>`<tr><td>${esc(x.customer)}</td><td>${num(x.weight)} MT</td><td>${esc(x.material)}</td><td>${money(x.rate)}</td><td>${money(x.total)}</td></tr>`).join('')||'<tr><td colspan="5">आज अभी कोई Sale entry नहीं है।</td></tr>'}<tr><th>कुल</th><th>${num(sales.reduce((a,x)=>a+(+x.weight||0),0))} MT</th><th></th><th></th><th>${money(sales.reduce((a,x)=>a+(+x.total||0),0))}</th></tr></table></div></div>
 <div class="panel"><h3>Material-wise Sale</h3><div class="tablewrap"><table><tr><th>Material</th><th>Total Weight</th><th>Total Sale</th></tr>${db.settings.materials.map(m=>`<tr><td>${m}</td><td>${num(by[m]?.w||0)} MT</td><td>${money(by[m]?.t||0)}</td></tr>`).join('')}<tr><th>Total</th><th>${num(sales.reduce((a,x)=>a+(+x.weight||0),0))} MT</th><th>${money(sales.reduce((a,x)=>a+(+x.total||0),0))}</th></tr></table></div></div>
-<div class="reportgrid"><div class="reportbox">Cash Sale<b>${money(cash)}</b></div><div class="reportbox">Udhar Sale<b>${money(udhar)}</b></div><div class="reportbox">भराव Tractor<b>${bt}</b></div><div class="reportbox">Royalty Difference<b>${num(db.royalty.filter(x=>x.date===d).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0))} MT</b></div></div>
+<div class="reportgrid"><div class="reportbox">JCB Loading<b>${jcb.length}</b></div><div class="reportbox">Verified<b>${jcb.filter(j=>db.officeEntries.some(o=>String(o.date)===d&&String(o.serial)===String(j.serial))).length}</b></div><div class="reportbox">Cash Sale<b>${money(cash)}</b></div><div class="reportbox">Udhar Sale<b>${money(udhar)}</b></div><div class="reportbox">भराव Tractor<b>${bt}</b></div><div class="reportbox">Royalty Difference<b>${num(db.royalty.filter(x=>x.date===d).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0))} MT</b></div></div>
 <div class="panel"><h3>Month Calendar Summary</h3><div class="tablewrap"><table><tr><th>Date</th><th>Sale</th><th>Weight</th><th>Cash</th><th>Udhar</th><th>भराव Tractor</th><th>Royalty Difference</th></tr>${monthRows()}</table></div></div>`}
 function monthRows(){let m=today().slice(0,7),days=[];for(let i=1;i<=31;i++){let dt=`${m}-${String(i).padStart(2,"0")}`;let chk=new Date(dt);if(chk.getMonth()+1!==Number(m.slice(5)))continue;let s=db.sales.filter(x=>x.date===dt),b=db.bharav.filter(x=>x.date===dt).reduce((a,x)=>a+x.tractors,0),r=db.royalty.filter(x=>x.date===dt).reduce((a,x)=>a+(+x.original||0)-(+x.naka||0),0);if(s.length||b||r)days.push(`<tr><td>${dt}</td><td>${money(s.reduce((a,x)=>a+x.total,0))}</td><td>${num(s.reduce((a,x)=>a+x.weight,0))} MT</td><td>${money(s.filter(x=>x.payment==="Cash").reduce((a,x)=>a+x.total,0))}</td><td>${money(s.filter(x=>x.payment==="Udhar").reduce((a,x)=>a+x.total,0))}</td><td>${b}</td><td>${num(r)} MT</td></tr>`)}return days.join("")||'<tr><td colspan="7">इस महीने अभी कोई saved entry नहीं है।</td></tr>'}
 function settings(){let fields=[['date','Date'],['rst','RST No.'],['customer','Customer Name'],['place','Place'],['weight','Weight'],['rate','Rate'],['vehicle','Vehicle Number'],['naka','Naka Parchi'],['mobile','Mobile Number'],['remark','Remark']];let custom=db.settings.customFields||[];let c=db.settings.cloudSync?.config||BUILTIN_FIREBASE_CONFIG;let enabled=!!db.settings.cloudSync?.enabled;document.getElementById('app').innerHTML=header('Settings','Compulsory field, menu, custom field और Cloud Sync यहाँ manage करें')+`<div class="panel"><h3>☁️ Cloud Sync</h3><div class="notice">Live Sync Firebase के साथ पहले से configured है। सामान्य user को Firebase की technical details दिखाने या बदलने की जरूरत नहीं है।</div><p class="muted" id="cloudStatus">${enabled?"● Live Sync configured":"○ Live Sync बंद है"}</p></div><div class="panel"><h3>Sale Entry में Compulsory Fields</h3><div class="grid">${fields.map(([k,l])=>`<label style="display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #ddd;border-radius:8px"><input type="checkbox" ${req(k)==='required'?'checked':''} onchange="db.settings.requiredFields['${k}']=this.checked;save();settings()"> ${l}</label>`).join('')}</div></div><div class="panel"><h3>नया Field जोड़ें</h3><div class="grid"><div class="field"><label>Field का नाम</label><input id="newFieldLabel" placeholder="जैसे Driver Name"></div><div class="field"><label>Type</label><select id="newFieldType"><option value="text">Text</option><option value="number">Number</option></select></div><div class="field" style="align-self:end"><button class="btn green" onclick="addCustomField()">+ Field जोड़ें</button></div></div><div class="tablewrap"><table><tr><th>Field</th><th>Type</th><th>Compulsory</th><th>Delete</th></tr>${custom.map(f=>`<tr><td>${esc(f.label)}</td><td>${esc(f.type||'text')}</td><td><input type="checkbox" ${f.required!==false?'checked':''} onchange="setCustomRequired('${f.key}',this.checked)"></td><td><button class="btn danger" onclick="deleteCustomField('${f.key}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="4">अभी कोई custom field नहीं है।</td></tr>'}</table></div></div><div class="panel"><h3>Menu दिखाएँ / छुपाएँ</h3><div class="grid">${pages.filter(p=>!['dashboard','settings'].includes(p[0])).map(p=>`<label style="display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #ddd;border-radius:8px"><input type="checkbox" ${!(db.settings.hiddenMenus||[]).includes(p[0])?'checked':''} onchange="toggleMenu('${p[0]}',this.checked)"> ${p[1]} ${p[2]}</label>`).join('')}</div></div><div class="panel"><h3>🪨 Material Management</h3><div class="notice">Sale Entry में यही Material options दिखेंगे। नया material यहाँ से जोड़ें। हटाने पर पुराने Sale records delete नहीं होंगे।</div><div class="grid"><div class="field"><label>नया Material नाम</label><input id="newMaterialName" placeholder="जैसे 40 MM"></div><div class="field" style="align-self:end"><button class="btn green" onclick="addMaterial()">+ Material जोड़ें</button></div></div><div class="tablewrap" style="margin-top:10px"><table><tr><th>Material</th><th>Action</th></tr>${(db.settings.materials||[]).map(m=>`<tr><td><b>${esc(m)}</b></td><td><button class="btn" data-material="${esc(m)}" onclick="editMaterial(this.dataset.material)">✏️ Edit</button> <button class="btn danger" data-material="${esc(m)}" onclick="deleteMaterial(this.dataset.material)">🗑 Delete</button></td></tr>`).join('')||'<tr><td colspan="2">कोई Material नहीं है।</td></tr>'}</table></div></div><div class="panel"><h3>भराव Rate</h3><button class="btn" onclick="editBharavRate()">Rate Edit करें (अभी ${money(db.settings.bharavRate??150)})</button></div>`;if(enabled)initCloud()}
