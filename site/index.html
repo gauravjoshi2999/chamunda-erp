@@ -530,10 +530,10 @@ function jcbNav(){
 }
 function jcbEntry(){
   db.jcbEntries??=[];
-  const d=today(),serial=jcbNextSerial(d),baseMats=(db.settings.materials||[]).slice(),mats=baseMats.some(m=>String(m).trim().toLowerCase()==='bharav'||String(m).trim()==='भराव')?baseMats:[...baseMats,'भराव'];
+  const d=today(),serial=jcbNextSerial(d),mats=[...new Set((db.settings.materials||[]).map(String).concat(['भराव']))];
   window.jcbStep=Number(window.jcbStep||1);
-  window.jcbDraft=window.jcbDraft||{date:d,serial,time:currentTime(),vehicleType:'',customer:'',material:'',photo:''};
-  if(window.jcbDraft.date!==d){window.jcbStep=1;window.jcbDraft={date:d,serial,time:currentTime(),vehicleType:'',customer:'',material:'',photo:''};}
+  window.jcbDraft=window.jcbDraft||{date:d,serial,time:currentTime(),vehicleType:'',material:'',photo:''};
+  if(window.jcbDraft.date!==d){window.jcbStep=1;window.jcbDraft={date:d,serial,time:currentTime(),vehicleType:'',material:'',photo:''};}
   window.jcbDraft.serial=serial;window.jcbDraft.date=d;window.jcbDraft.time=currentTime();
   const step=Math.min(4,Math.max(1,window.jcbStep)),draft=window.jcbDraft;
   const progress=[1,2,3,4].map(n=>'<span style="flex:1;height:7px;border-radius:99px;background:'+(n<=step?'#1769d3':'#dbe3ea')+'"></span>').join('');
@@ -542,17 +542,27 @@ function jcbEntry(){
   if(step===1){
     body='<div class="panel" style="text-align:center"><div style="font-size:24px;font-weight:900;margin-bottom:8px">गाड़ी चुनें</div><div class="muted" style="margin-bottom:18px">सिर्फ गाड़ी के चिन्ह पर दबाएँ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><button type="button" class="btn '+(draft.vehicleType==='Dumper'?'primary':'')+'" style="min-height:150px;font-size:25px;font-weight:900" onclick="jcbPickVehicle(&quot;Dumper&quot;)">🚚<br><span style="font-size:20px">DUMPER</span></button><button type="button" class="btn '+(draft.vehicleType==='Tractor'?'primary':'')+'" style="min-height:150px;font-size:25px;font-weight:900" onclick="jcbPickVehicle(&quot;Tractor&quot;)">🚜<br><span style="font-size:20px">TRACTOR</span></button></div></div>';
   }else if(step===2){
-    body='<div class="panel"><div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:16px">Material चुनें</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+mats.map(m=>'<button type="button" class="btn '+(draft.material===m?'primary':'')+'" style="min-height:70px;font-size:19px;font-weight:850" data-material="'+esc(m)+'" onclick="jcbPickMaterial(this.dataset.material)">'+esc(String(m).trim().toLowerCase()==='bharav'?'भराव':m)+'</button>').join('')+'</div></div>';
+    body='<div class="panel"><div style="font-size:24px;font-weight:900;text-align:center;margin-bottom:16px">Material चुनें</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+mats.map(m=>'<button type="button" class="btn '+(draft.material===m?'primary':'')+'" style="min-height:70px;font-size:19px;font-weight:850" data-material="'+esc(m)+'" onclick="jcbPickMaterial(this.dataset.material)">'+esc(m)+'</button>').join('')+'</div></div>';
   }else if(step===3){
     body='<div class="panel" style="text-align:center"><div style="font-size:24px;font-weight:900;margin-bottom:8px">गाड़ी की Photo लें</div><div class="muted" style="margin-bottom:16px">मोबाइल camera खुलेगा। गाड़ी की साफ photo लें।</div><input id="jcbPhotoStep" type="file" accept="image/*" capture="environment" style="width:100%;min-height:58px;padding:12px;border:2px dashed #9fb3c7;border-radius:12px;background:#f8fafc"><div id="jcbPhotoPreview" class="muted" style="margin-top:10px">'+(draft.photo?'✓ Photo ready':'Photo लेना जरूरी है')+'</div></div>';
   }else{
-    body='<div class="panel" style="text-align:center"><div style="font-size:25px;font-weight:900;margin-bottom:15px">सब सही है?</div><div style="font-size:18px;line-height:1.9;text-align:left;background:#f7f9fb;border-radius:12px;padding:14px"><b>Serial:</b> '+esc(serial)+'<br><b>गाड़ी:</b> '+esc(draft.vehicleType==='Dumper'?'🚚 Dumper':'🚜 Tractor')+'<br><b>Material:</b> '+esc(String(draft.material).trim().toLowerCase()==='bharav'?'भराव':draft.material)+'<br><b>Photo:</b> '+(draft.photo?'✓ ली गई':'✗ बाकी')+'</div><button type="button" class="btn green" style="width:100%;min-height:68px;font-size:23px;margin-top:16px" onclick="submitJcbEntry()">✅ SUBMIT / जमा करें</button></div>';
+    body='<div class="panel" style="text-align:center"><div style="font-size:25px;font-weight:900;margin-bottom:15px">सब सही है?</div><div style="font-size:18px;line-height:1.9;text-align:left;background:#f7f9fb;border-radius:12px;padding:14px"><b>Serial:</b> '+esc(serial)+'<br><b>गाड़ी:</b> '+esc(draft.vehicleType==='Dumper'?'🚚 Dumper':'🚜 Tractor')+'<br><b>Material:</b> '+esc(draft.material)+'<br><b>Photo:</b> '+(draft.photo?'✓ ली गई':'✗ बाकी')+'</div><button type="button" class="btn green" style="width:100%;min-height:68px;font-size:23px;margin-top:16px" onclick="submitJcbEntry()">✅ SUBMIT / जमा करें</button></div>';
   }
   document.getElementById('app').innerHTML=top+body;jcbNav();
   if(step===3){
     const pf=document.getElementById('jcbPhotoStep');
-    if(pf)pf.onchange=async()=>{const file=pf.files?.[0];if(!file)return;try{draft.photo=await compressJcbPhoto(file);draft.photoName=file.name||'Photo';const pv=document.getElementById('jcbPhotoPreview');if(pv)pv.textContent='✓ Photo ready';window.jcbStep=4;jcbEntry();}catch(e){alert(e.message||'Photo नहीं पढ़ी जा सकी');}};
+    if(pf)pf.onchange=async()=>{const file=pf.files?.[0];if(!file)return;try{draft.photo=await compressJcbPhoto(file);draft.photoName=file.name||'Photo';window.jcbStep=4;jcbEntry();}catch(e){alert(e.message||'Photo नहीं पढ़ी जा सकी');}};
   }
+}
+function jcbPickVehicle(type){window.jcbDraft=window.jcbDraft||{};window.jcbDraft.vehicleType=type==='Tractor'?'Tractor':'Dumper';window.jcbDraft.vehicle='';window.jcbStep=2;jcbEntry();}
+function jcbPickMaterial(material){const m=String(material||'').trim();if(!m)return;window.jcbDraft=window.jcbDraft||{};window.jcbDraft.material=m;window.jcbStep=3;jcbEntry();}
+async function submitJcbEntry(){
+  const d=today(),draft=window.jcbDraft||{};
+  if(!draft.vehicleType)return alert('गाड़ी चुनें');
+  if(!String(draft.material||'').trim())return alert('Material चुनें');
+  if(!draft.photo)return alert('गाड़ी की photo लेना जरूरी है');
+  const x={serial:jcbNextSerial(d),date:d,time:currentTime(),customer:'',vehicleType:draft.vehicleType,vehicle:'',material:String(draft.material).trim(),photo:draft.photo,status:'submitted',_id:'jcb_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)};
+  db.jcbEntries.push(x);save();toast('✅ JCB entry submit हो गई');window.jcbStep=1;window.jcbDraft=null;setTimeout(()=>jcbEntry(),250);
 }
 
 function jcbPickVehicle(type){
