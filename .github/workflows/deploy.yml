@@ -60,7 +60,7 @@ jobs:
           open(p,"w",encoding="utf-8").write(s)
           PY
 
-      - name: Deploy Firebase Hosting
+      - name: Deploy Firebase Resources
         run: |
           npm install -g firebase-tools
-          firebase deploy --only hosting --project chamunda-erp
+          firebase deploy --only hosting,database:main --project chamunda-erp
