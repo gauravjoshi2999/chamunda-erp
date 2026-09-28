@@ -278,6 +278,14 @@ function initCloud(){if(cloudInitInProgress)return cloudReady;if(!window.firebas
 if(firebase.auth().currentUser&&savedMode){
   authUser=firebase.auth().currentUser;userMode=savedMode;startDb();return true;
 }
+if(savedMode==='jcb'){
+  firebase.auth().signInAnonymously().then(u=>{
+    authUser=u.user||u;userMode='jcb';officePage='jcb';sessionStorage.setItem("chamunda_office_page","jcb");hideLogin();startDb();
+  }).catch(e=>{
+    userMode='';localStorage.removeItem("chamunda_erp_login_mode");showLogin();
+  });
+  return false;
+}
 if(!savedMode){
   try{firebase.auth().signOut().catch(()=>{});}catch(e){}
   authUser=null;userMode='admin';showLogin();return false;
