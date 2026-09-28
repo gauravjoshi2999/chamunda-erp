@@ -3,7 +3,10 @@
     "chamundaERP": {
       "data": {
         ".read": "auth != null",
-        ".write": "auth != null"
+        ".write": "auth != null",
+        "jcbInbox": {
+          ".write": true
+        }
       }
     }
   }
