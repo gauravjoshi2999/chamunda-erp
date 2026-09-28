@@ -349,7 +349,15 @@ function cloudPush(){
   const payload=JSON.parse(JSON.stringify(db));
   cloudWriting=true;
   cloudStatus('● Cloud में save हो रहा है...',true);
-  cloudRef.set(payload).then(()=>{
+  const saveJcb=JSON.parse(JSON.stringify(db.jcbEntries||[]));
+  delete payload.jcbEntries;
+  cloudRef.update(payload).then(()=>{
+    if(saveJcb.length){
+      const j={};
+      saveJcb.forEach((e,i)=>{if(e&&e._id)j[String(e._id)]=e;else if(e)j['legacy_'+i]=e;});
+      return cloudRef.child('jcbEntries').update(j);
+    }
+  }).then(()=>{
     cloudWriting=false;cloudStatus('● Live Sync चालू',true);
   }).catch(e=>{
     cloudWriting=false;cloudStatus('⚠ Sync failed: '+(e.message||'check Rules'));toast('Cloud save नहीं हुआ');
