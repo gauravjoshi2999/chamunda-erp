@@ -64,12 +64,3 @@ jobs:
         run: |
           npm install -g firebase-tools
           firebase deploy --only hosting --project chamunda-erp
-
-      - name: Deploy Realtime Database Rules
-        run: |
-          ACCESS_TOKEN="$(gcloud auth print-access-token)"
-          curl --fail-with-body -sS -X PUT \
-            -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-            -H "Content-Type: application/json" \
-            --data-binary @database.rules.json \
-            "https://chamunda-erp-default-rtdb.firebaseio.com/.settings/rules.json"
