@@ -291,7 +291,7 @@ cloudJcbUnsub=cloudRef.child('jcbEntries').on('value',snap=>{
     const arr=Array.isArray(v)?v:Object.values(v||{});
     if(!arr.length && !(db.jcbEntries||[]).length)return;
     const before=JSON.stringify(db.jcbEntries||[]);
-    db.jcbEntries=arr.filter(Boolean);
+    db.jcbEntries=arr.filter(Boolean);let changedSerial=false;db.jcbEntries.forEach(e=>{if(!e.serial){e.serial=jcbNextSerial(String(e.date||today()).slice(0,10));changedSerial=true;}});
     migrate();
     localStorage.setItem(KEY,JSON.stringify(db));
     cloudReady=true;
