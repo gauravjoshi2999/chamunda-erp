@@ -538,7 +538,7 @@ function completeOfficeEntry(id){const x=(db.officeEntries||[]).find(e=>e._id===
 function loadOfficeEntryIntoSale(x){const f=document.getElementById('saleForm');if(!f||!x)return;['date','customer','place','vehicle','vehicleType','tractorCount','material','weight','naka'].forEach(k=>{if(f.elements[k])f.elements[k].value=x[k]??''});if(f.elements.rst)f.elements.rst.value=x.rst??'';const tw=document.getElementById('tractorCountWrap');if(tw)tw.style.display=f.elements.vehicleType?.value==='Tractor'?'block':'none';if(f.elements.date)f.elements.date.value=x.date||today();window.loadedOfficeId=x._id;toast('Office entry load हो गई — अब Rate और बाकी fields भरें')}
 function editOfficeEntry(id){
  const x=(db.officeEntries||[]).find(e=>e._id===id); if(!x)return;
- if(x.status==='submitted'){alert('यह Office entry Submit हो चुकी है। अब Edit नहीं कर सकते।');return;}
+ if(x.status==='submitted'||x.status==='completed'){alert(x.status==='completed'?'यह Office entry Complete हो चुकी है। अब Office Login से Edit नहीं कर सकते।':'यह Office entry Submit हो चुकी है। अब Edit नहीं कर सकते।');return;}
  const mats=db.settings.materials||[];
  const modal=document.createElement('div'); modal.className='modal-backdrop';
  modal.style.cssText='position:fixed;inset:0;background:#0008;z-index:120;display:grid;place-items:center;padding:12px';
